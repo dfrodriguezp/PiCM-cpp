@@ -12,12 +12,15 @@ class Particle(object):
         self.vel = vel
         self.q = 1/n
         self.m = m
+        self.qm = n
         self.move = move
 
 def maxwell_distribution(n, vt, vd, vx):
     return (n / (numpy.sqrt(2 * numpy.pi)) * vt) * numpy.exp(-((vx - vd)**2) / (2 * vt**2))
 
-def two_stream(N, L, dr, vt, vd):
+def two_stream(N, L, dr, vt, vd, s):
+    S1 = numpy.random.seed(s)
+    S2 = random.seed(s)
     parts = list()
     n = N / (L**2)
     Ne_Ni = 2

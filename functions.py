@@ -134,13 +134,13 @@ def Boris(E, B, parts, L, dt):
     index = 0
     for p in parts:
         if p.move:
-            t = 0.5 * (p.q / p.m) * B * dt
+            t = 0.5 * (p.qm) * B * dt
             t_2 = numpy.linalg.norm(t) * numpy.linalg.norm(t)
             s = (2 * t) / (1 + t_2)
-            v_minus = p.vel + 0.5 * (p.q / p.m) * E[index] * dt
+            v_minus = p.vel + 0.5 * (p.qm) * E[index] * dt
             v_prime = v_minus + numpy.cross(v_minus, t)
             v_plus = v_minus + numpy.cross(v_prime, s)
-            p.vel = v_plus + 0.5 * (p.q / p.m) * E[index] * dt
+            p.vel = v_plus + 0.5 * (p.qm) * E[index] * dt
 
             p.pos += p.vel * dt
 
@@ -161,8 +161,8 @@ def leapfrog(E, parts, L, dt):
     index = 0
     for p in parts:
         if p.move:
-            p.vel[0] += (p.q / p.m) * E[0][index] * dt
-            p.vel[1] += (p.q / p.m) * E[1][index] * dt
+            p.vel[0] += (p.qm) * E[0][index] * dt
+            p.vel[1] += (p.qm) * E[1][index] * dt
             p.pos += p.vel * dt
 
             while p.pos[0] < 0:
@@ -180,8 +180,8 @@ def rewind(direction, E, parts, dt):
     index = 0
     for p in parts:
         if p.move:
-            p.vel[0] += direction * 0.5 * (p.q / p.m) * E[0][index] * dt
-            p.vel[1] += direction * 0.5 * (p.q / p.m) * E[1][index] * dt
+            p.vel[0] += direction * 0.5 * (p.qm) * E[0][index] * dt
+            p.vel[1] += direction * 0.5 * (p.qm) * E[1][index] * dt
         index += 1
     return parts
 
@@ -189,13 +189,13 @@ def rewind(direction, E, parts, dt):
 #     index = 0
 #     for p in parts:
 #         if p.move:
-#             t = 0.25 * (p.q / p.m) * B * dt
+#             t = 0.25 * (p.qm) * B * dt
 #             t_2 = numpy.linalg.norm(t) * numpy.linalg.norm(t)
 #             s = (2 * t) / (1 + t_2)
-#             v_minus = p.vel + 0.25 * (p.q / p.m) * E[index] * dt
+#             v_minus = p.vel + 0.25 * (p.qm) * E[index] * dt
 #             v_prime = v_minus + numpy.cross(v_minus, t)
 #             v_plus = v_minus + numpy.cross(v_prime, s)
-#             p.vel = direction * (v_plus + 0.25 * (p.q / p.m) * E[index] * dt)
+#             p.vel = direction * (v_plus + 0.25 * (p.qm) * E[index] * dt)
 #
 #         index += 1
 #
