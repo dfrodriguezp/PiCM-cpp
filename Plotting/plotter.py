@@ -5,23 +5,26 @@ from matplotlib import animation
 import click
 
 @click.command()
+@click.option("--name", type=str)
+@click.option("--x", type=str)
+@click.option("--y", type=str)
 @click.argument("file")
-def plotter(file):
+def plotter(file, name, x, y):
     with open(file) as json_data:
         d = json.load(json_data)
 
     fig = pyplot.figure(figsize=(16,9))
-    ax = pyplot.axes(xlim=(0, d["box size"]), ylim=(-0.2, 0.2))
+    ax = pyplot.axes(xlim=(-0.5, 0.5), ylim=(-0.5, 0.5))
     scat = ax.scatter([], [], color="0.2", lw=0, s=10)
-    ax.set_xlabel("$x$ [au]", size=20)
-    ax.set_ylabel("$v_x$ [au]", size=20)
+    ax.set_xlabel("${}$ [au]".format(x), size=20)
+    ax.set_ylabel("${}$ [au]".format(y), size=20)
 
     def init():
         scat.set_offsets([])
         return scat,
 
     def animate(i):
-        filename = "%s/phase_space/step%s.dat" %(d["directory"], i)
+        filename = "{}/{}/step{}.dat".format(d["directory"], name, i)
         x, y = numpy.loadtxt(filename, unpack=True)
         data = numpy.hstack((x[:len(x),numpy.newaxis],y[:len(x),numpy.newaxis]))
         scat.set_offsets(data)

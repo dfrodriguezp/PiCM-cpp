@@ -82,32 +82,26 @@ def potential(rho, gp, dr):
     return phi, phi_k, rho_k
 
 def Efield_GP(phi, gp, dr):
-    E_x = numpy.zeros_like(phi)
-    E_y = numpy.zeros_like(phi)
-    # E = numpy.zeros(shape=(gp, gp, 2))
+    E = numpy.zeros(shape=(gp, gp, 2))
 
     for j in range(gp):
         for i in range(gp):
             nxt_i = (i + 1) if (i < gp-1) else 0
             prv_i = (i - 1) if (i > 0) else (gp-1)
 
-            E_x[i][j] = (phi[prv_i][j] - phi[nxt_i][j]) / (2 * dr)
-            # E[i][j][0] = (phi[prv_i][j] - phi[nxt_i][j]) / (2 * dr)
+            E[i][j][0] = (phi[prv_i][j] - phi[nxt_i][j]) / (2 * dr)
 
     for i in range(gp):
         for j in range(gp):
             nxt_j = (j + 1) if (j < gp-1) else 0
             prv_j = (j - 1) if (j > 0) else (gp-1)
 
-            E_y[i][j] = (phi[i][prv_j] - phi[i][nxt_j]) / (2 * dr)
-            # E[i][j][1] = (phi[i][prv_j] - phi[i][nxt_j]) / (2 * dr)
+            E[i][j][1] = (phi[i][prv_j] - phi[i][nxt_j]) / (2 * dr)
 
-    return E_x, E_y
+    return E
 
 def Efield_P(field, parts, dr):
-    E_x = numpy.zeros_like(parts)
-    E_y = numpy.zeros_like(parts)
-    # E = numpy.zeros(shape=(len(parts), 2))
+    E = numpy.zeros(shape=(len(parts), 2))
 
     index = 0
     for p in parts:
@@ -117,18 +111,14 @@ def Efield_P(field, parts, dr):
             hx = p.pos[0] - (i * dr)
             hy = p.pos[1] - (j * dr)
 
-            E_x[index] = field[0][i][j] * (dr - hx) * (dr - hy) + field[0][i][j+1] * (dr - hx) * hy + field[0][i+1][j] * hx * (dr - hy) + field[0][i+1][j+1] * hx * hy
-            E_y[index] = field[1][i][j] * (dr - hx) * (dr - hy) + field[1][i][j+1] * (dr - hx) * hy + field[1][i+1][j] * hx * (dr - hy) + field[1][i+1][j+1] * hx * hy
-
-            # E_x[index] = field[i][j][0] * (dr - hx) * (dr - hy) + field[i][j+1][0] * (dr - hx) * (hy) + field[i+1][j][0] * (hx) * (dr - hy) + field[i+1][j+1][0] * (hx) * (hy)
-            # E_y[index] = field[i][j][1] * (dr - hx) * (dr - hy) + field[i][j+1][1] * (dr - hx) * (hy) + field[i+1][j][1] * (hx) * (dr - hy) + field[i+1][j+1][1] * (hx) * (hy)
+            E[index][0] = field[i][j][0] * (dr - hx) * (dr - hy) + field[i][j+1][0] * (dr - hx) * (hy) + field[i+1][j][0] * (hx) * (dr - hy) + field[i+1][j+1][0] * (hx) * (hy)
+            E[index][1] = field[i][j][1] * (dr - hx) * (dr - hy) + field[i][j+1][1] * (dr - hx) * (hy) + field[i+1][j][1] * (hx) * (dr - hy) + field[i+1][j+1][1] * (hx) * (hy)
 
         index += 1
 
-    E_x /= (dr ** 2)
-    E_y /= (dr ** 2)
+    E /= (dr * dr)
 
-    return E_x, E_y
+    return E
 
 def Boris(E, B, parts, L, dt):
     index = 0
@@ -144,14 +134,7 @@ def Boris(E, B, parts, L, dt):
 
             p.pos += p.vel * dt
 
-            while p.pos[0] < 0:
-                p.pos[0] += L
-            while p.pos[0] >= L:
-                p.pos[0] -= L
-            while p.pos[1] < 0:
-                p.pos[1] += L
-            while p.pos[1] >= L:
-                p.pos[1] -= L
+            p.pos = p.pos % L
 
         index += 1
 
@@ -161,42 +144,35 @@ def leapfrog(E, parts, L, dt):
     index = 0
     for p in parts:
         if p.move:
-            p.vel[0] += (p.qm) * E[0][index] * dt
-            p.vel[1] += (p.qm) * E[1][index] * dt
+            p.vel += (p.qm) * E[index] * dt
             p.pos += p.vel * dt
 
-            while p.pos[0] < 0:
-                p.pos[0] += L
-            while p.pos[0] >= L:
-                p.pos[0] -= L
-            while p.pos[1] < 0:
-                p.pos[1] += L
-            while p.pos[1] >= L:
-                p.pos[1] -= L
+            p.pos = p.pos % L
+
         index += 1
     return parts
 
-def rewind(direction, E, parts, dt):
-    index = 0
-    for p in parts:
-        if p.move:
-            p.vel[0] += direction * 0.5 * (p.qm) * E[0][index] * dt
-            p.vel[1] += direction * 0.5 * (p.qm) * E[1][index] * dt
-        index += 1
-    return parts
-
-# def rewind(direction, E, B, parts, dt):
+# def rewind(direction, E, parts, dt):
 #     index = 0
 #     for p in parts:
 #         if p.move:
-#             t = 0.25 * (p.qm) * B * dt
-#             t_2 = numpy.linalg.norm(t) * numpy.linalg.norm(t)
-#             s = (2 * t) / (1 + t_2)
-#             v_minus = p.vel + 0.25 * (p.qm) * E[index] * dt
-#             v_prime = v_minus + numpy.cross(v_minus, t)
-#             v_plus = v_minus + numpy.cross(v_prime, s)
-#             p.vel = direction * (v_plus + 0.25 * (p.qm) * E[index] * dt)
-#
+#             p.vel += direction * 0.5 * (p.qm) * E[index] * dt
 #         index += 1
-#
 #     return parts
+
+def rewind(direction, E, B, parts, dt):
+    dt = dt * 0.5
+    index = 0
+    for p in parts:
+        if p.move:
+            t = 0.5 * (p.qm) * B * dt
+            t_2 = numpy.linalg.norm(t) * numpy.linalg.norm(t)
+            s = (2 * t) / (1 + t_2)
+            v_minus = p.vel + 0.5 * (p.qm) * E[index] * dt
+            v_prime = v_minus + numpy.cross(v_minus, t)
+            v_plus = v_minus + numpy.cross(v_prime, s)
+            p.vel = direction * (v_plus + 0.5 * (p.qm) * E[index] * dt)
+
+        index += 1
+
+    return parts
