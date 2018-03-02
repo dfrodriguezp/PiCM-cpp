@@ -13,7 +13,7 @@ import getpass
 # @click.option("--test", type=str, default="1")
 @click.option("--bx", type=float, default=0.0)
 @click.option("--by", type=float, default=0.0)
-@click.option("--c", type=int, default=63)
+@click.option("--gp", type=int, default=64)
 @click.option("--np", type=int, default=100)
 @click.option("--dt", type=float, default=0.1)
 # @click.option("--dr", type=float, prompt="dr", default=1.0)
@@ -22,11 +22,11 @@ import getpass
 @click.option("--p_vd", type=float, default=0.03125)
 @click.option("--steps", type=int, default=10)
 @click.option("--seed", type=int, default=69)
-def main(system, bx, by, c, np, dt, l, p_vt, p_vd, steps, seed):
-    GP = c + 1
+def main(system, bx, by, gp, np, dt, l, p_vt, p_vd, steps, seed):
+    GP = gp
     NP = np ** 2
     L = l
-    dr = L / c
+    dr = L / (gp - 1)
 
     vt = L * p_vt
     vd = L * p_vd

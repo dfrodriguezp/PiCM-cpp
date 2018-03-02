@@ -14,7 +14,7 @@ def plotter(file, name, x, y):
         d = json.load(json_data)
 
     fig = pyplot.figure(figsize=(16,9))
-    ax = pyplot.axes(xlim=(-0.5, 0.5), ylim=(-0.5, 0.5))
+    ax = pyplot.axes(xlim=(0.0, d["box size"]), ylim=(-0.5, 0.5))
     scat = ax.scatter([], [], color="0.2", lw=0, s=10)
     ax.set_xlabel("${}$ [au]".format(x), size=20)
     ax.set_ylabel("${}$ [au]".format(y), size=20)

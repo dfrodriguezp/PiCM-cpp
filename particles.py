@@ -8,7 +8,7 @@ m = 1.0
 qm = 1.0
 
 class Particle(object):
-    def __init__(self, pos, vel, m, n, qm, move):
+    def __init__(self, pos, vel, n, qm, move):
         self.pos = pos
         self.vel = vel
         self.qm = qm
@@ -20,26 +20,24 @@ def two_stream(N, L, dr, vt, vd, s):
     S2 = random.seed(s)
     parts = list()
     n = N / (L**2)
-    Ne_Ni = 2
-    Ne = N / Ne_Ni
     margin = dr / 10
 
-    P = numpy.linspace(0 + margin, L - margin, int(numpy.sqrt(N)))
+    P = numpy.linspace(margin, L - margin, int(numpy.sqrt(N)))
     pos = numpy.array(list(product(P, P)))
     vel0 = numpy.array([0.0, 0.0])
 
     indexes = list(range(N))
     random.shuffle(indexes)
-    left = [indexes.pop() for _ in range(int(Ne/2))]
-    right = [indexes.pop() for _ in range(int(Ne/2))]
+    left = [indexes.pop() for _ in range(int(N/4))]
+    right = [indexes.pop() for _ in range(int(N/4))]
 
     for i in indexes:
-        parts.append(Particle(pos[i], vel0, m, n, qm, False))
+        parts.append(Particle(pos[i], vel0, n, qm, False))
     for i in left:
         vel1 = numpy.array([numpy.random.normal(vd, vt), 0.0])
-        parts.append(Particle(pos[i], vel1, m, n, -qm, True))
+        parts.append(Particle(pos[i], vel1, n, -qm, True))
     for i in right:
         vel2 = numpy.array([numpy.random.normal(-vd, vt), 0.0])
-        parts.append(Particle(pos[i], vel2, m, n, -qm, True))
+        parts.append(Particle(pos[i], vel2, n, -qm, True))
 
     return parts
