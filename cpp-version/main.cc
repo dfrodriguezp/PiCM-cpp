@@ -6,21 +6,6 @@
 #include <valarray>
 // #include "functions.cc"
 
-typedef std::valarray<std::valarray<double>> array2D_double;
-
-void print_2DvalArray(std::valarray<std::valarray<double>> array)
-{
-    for (int i = 0; i < array.size(); ++i)
-    {
-        for (int j = 0; j < array[i].size(); ++j)
-        {
-            std::cout << array[i][j] << " ";            
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-}
-
 void printVectorDouble(std::vector<double> vector)
 {
     std::cout << "[";
@@ -116,17 +101,5 @@ int main(int argc, char const *argv[])
         parts.push_back(Particle(pos[*i], {maxwell_right(engine), 0.0}, n, -1.0, true));
     }
 
-    // std::valarray<std::valarray<double>> rho = density(parts, gridPoints, dr);
-
-    array2D_double rho;
-
-    for (int i = 0; i < gridPoints; ++i)
-    {
-        for (int j = 0; j < gridPoints; ++j)
-        {
-            rho[i][j] = 0.0;
-        }
-    }
-    // print_2DvalArray(rho);
     return 0;
 }
