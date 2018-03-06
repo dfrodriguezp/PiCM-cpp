@@ -16,6 +16,7 @@ particle.o: cpp-version/particle.cc
 functions.o: cpp-version/functions.cc
 	$(CC) $(CFLAGS) -c cpp-version/functions.cc -o functions.o
 
+
 .PHONY: clean
 clean:
 	rm -rf main *.o

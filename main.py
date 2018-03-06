@@ -13,14 +13,14 @@ import getpass
 # @click.option("--test", type=str, default="1")
 @click.option("--bx", type=float, default=0.0)
 @click.option("--by", type=float, default=0.0)
-@click.option("--gp", type=int, default=64)
-@click.option("--np", type=int, default=100)
+@click.option("--gp", type=int, default=4)
+@click.option("--np", type=int, default=3)
 @click.option("--dt", type=float, default=0.1)
 # @click.option("--dr", type=float, prompt="dr", default=1.0)
 @click.option("--l", type=float, default=1.0)
 @click.option("--p_vt", type=float, default=0.001526)
 @click.option("--p_vd", type=float, default=0.03125)
-@click.option("--steps", type=int, default=10)
+@click.option("--steps", type=int, default=1)
 @click.option("--seed", type=int, default=69)
 def main(system, bx, by, gp, np, dt, l, p_vt, p_vd, steps, seed):
     GP = gp
@@ -61,9 +61,9 @@ def main(system, bx, by, gp, np, dt, l, p_vt, p_vd, steps, seed):
         json.dump(sample, fp)
 
     energies = open("{}/energies/energies.dat".format(directory), "w")
-
+    rho_c = numpy.array([p.q / (dr * dr) for p in parts])
     for step in tqdm(range(steps)):
-        RHO = functions.density2(parts, GP, dr)
+        RHO = functions.density2(parts, GP, dr, rho_c)
         PHIn, PHI_k, RHO_k = functions.potential(RHO, GP, dr)
         EFIELDn = functions.Efield_GP(PHIn, GP, dr)
         EFIELDp = functions.Efield_P(EFIELDn, parts, dr)

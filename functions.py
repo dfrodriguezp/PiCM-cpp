@@ -32,7 +32,7 @@ def density1(parts, gp, dr, rho_c):
 
     return rho
 
-def density2(parts, gp, dr):
+def density2(parts, gp, dr, rho_c):
     rho = numpy.zeros(shape=(gp, gp))
 
     for ind, p in enumerate(parts):
@@ -42,12 +42,12 @@ def density2(parts, gp, dr):
         hx = p.pos[0] - (i * dr)
         hy = p.pos[1] - (j * dr)
 
-        rho_c = p.q / (dr * dr)
+        # rho_c = p.q / (dr * dr)
 
-        rho[i, j] += rho_c * (dr - hx) * (dr - hy)
-        rho[i, j+1] += rho_c * (dr - hx) * (hy)
-        rho[i+1, j] += rho_c * (hx) * (dr - hy)
-        rho[i+1, j+1] += rho_c * (hx) * (hy)
+        rho[i, j] += rho_c[ind] * (dr - hx) * (dr - hy)
+        rho[i, j+1] += rho_c[ind] * (dr - hx) * (hy)
+        rho[i+1, j] += rho_c[ind] * (hx) * (dr - hy)
+        rho[i+1, j+1] += rho_c[ind] * (hx) * (hy)
 
 
     rho[:, -1] = (rho[:, -1] + rho[:, 0]) * 0.5

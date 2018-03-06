@@ -4,19 +4,11 @@
 #include <vector>
 #include <cmath>
 #include <valarray>
+#include <array>
+#include "parameters.h"
 // #include "functions.cc"
 
-void printVectorDouble(std::vector<double> vector)
-{
-    std::cout << "[";
-    for (auto i = vector.begin(); i != vector.end(); ++i)
-    {   
-        std::cout << *i << ", ";
-    }
-    std::cout << "]" << std::endl;
-}
-
-void printVectorInt(std::vector<int> vector)
+void printVector(std::vector<double> vector)
 {
     std::cout << "[";
     for (auto i = vector.begin(); i != vector.end(); ++i)
@@ -28,16 +20,17 @@ void printVectorInt(std::vector<int> vector)
 
 int main(int argc, char const *argv[])
 {
-    srand(time(0));
-    int N = pow(6, 2);
-    double L = 1.4;
-    double vt = L * 0.0015625;
-    double vd = L * 0.03125;
-    double dr = 0.1;
-    double Bx = 0.0;
-    double By = 0.0;
-    int gridPoints = 16;
-    int steps = 10;
+    srand(parameters::seed);
+    const int N = parameters::N;
+    const double L = parameters::L;
+    const double vt = L * parameters::p_vt;
+    const double vd = L * parameters::p_vd;
+    const double Bx = parameters::bx;
+    const double By = parameters::by;
+    const int gridPoints = parameters::gp;
+    const double dr = L / gridPoints;
+    const int steps = parameters::steps;
+    const double dt = parameters::dt;
 
     if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
     {
@@ -64,9 +57,9 @@ int main(int argc, char const *argv[])
         }
     }
 
-    std::vector<int> indexes;
-    std::vector<int> right;
-    std::vector<int> left;
+    std::vector<double> indexes;
+    std::vector<double> right;
+    std::vector<double> left;
     std::vector<Particle> parts;
 
     for (int i = 0; i < N; ++i)
@@ -99,6 +92,13 @@ int main(int argc, char const *argv[])
     for (auto i = right.begin(); i != right.end(); ++i)
     {
         parts.push_back(Particle(pos[*i], {maxwell_right(engine), 0.0}, n, -1.0, true));
+    }
+
+    std::vector<double> rho_c;
+
+    for (int i = 0; i < N; ++i)
+    {
+        rho_c.push_back(parts[i].q_ / (dr * dr));
     }
 
     return 0;

@@ -2,7 +2,6 @@
 
 struct Particle
 {
-
     std::valarray<double> position_;
     std::valarray<double> velocity_;
     double qm_;
