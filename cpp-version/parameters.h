@@ -15,4 +15,8 @@ namespace parameters
 	constexpr int seed(69);
 }
 
+namespace constants
+{
+	constexpr double pi(3.141592653589793);
+}
 #endif

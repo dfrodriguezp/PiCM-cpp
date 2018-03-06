@@ -2,22 +2,23 @@
 #include <cmath>
 #include <array>
 #include <valarray>
-#include <random>
 #include <vector>
+#include <complex>
 #include "particle.cc"
 #include "parameters.h"
-typedef std::array<std::array<double, parameters::gp>, parameters::gp> grid2D;
+
+
+typedef std::vector<std::valarray<double>> grid2D;
 
 grid2D density(std::vector<Particle> parts, std::vector<double> rho_c, const double dr)
+// grid2D density(const double dr)
 {
     grid2D rho;
+    std::valarray<double> rho_j(0.0, parameters::gp);
 
     for (int i = 0; i < parameters::gp; ++i)
     {
-        for (int j = 0; j < parameters::gp; ++j)
-        {
-            rho[i][j] = 0.0;
-        }
+        rho.push_back(rho_j);
     }
 
     for (int p = 0; p < parameters::N; ++p)
@@ -48,18 +49,27 @@ grid2D density(std::vector<Particle> parts, std::vector<double> rho_c, const dou
 
     for (int i = 0; i < parameters::gp; ++i)
     {
-        for (int j = 0; j < parameters::gp; ++j)
-        {
-            rho[i][j] /= (dr * dr);
-        }
+        rho[i] /= (dr * dr);
     }
-    
+
     return rho;
+}
+
+grid2D potential(grid2D rho, const double dr)
+{
+    grid2D phi;
+    grid2D phi_k;
+    grid2D rho_k;
+
+    
+
+    return phi;
 }
 int main(int argc, char const *argv[])
 {
     // grid2D RHO;
-    // RHO = density(parts, rho_c, dr);
+    // const double dr = 0.1;
+    // RHO = density(dr);
 
     // std::cout << "[" << std::endl;
     // for (int i = 0; i < parameters::gp; ++i)
