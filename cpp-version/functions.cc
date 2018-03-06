@@ -45,6 +45,14 @@ grid2D density(std::vector<Particle> parts, std::vector<double> rho_c, const dou
         rho[parameters::gp - 1][u] = (rho[parameters::gp - 1][u] + rho[0][u]) * 0.5;
         rho[0][u] = rho[parameters::gp - 1][u];
     }
+
+    for (int i = 0; i < parameters::gp; ++i)
+    {
+        for (int j = 0; j < parameters::gp; ++j)
+        {
+            rho[i][j] /= (dr * dr);
+        }
+    }
     
     return rho;
 }
