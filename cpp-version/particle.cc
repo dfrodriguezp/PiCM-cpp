@@ -1,3 +1,6 @@
+#ifndef PARTICLE
+#define PARTICLE
+
 #include <valarray>
 
 struct Particle
@@ -18,3 +21,5 @@ struct Particle
 
     }
 };
+
+#endif

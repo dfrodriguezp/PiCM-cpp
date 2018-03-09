@@ -1,12 +1,4 @@
-#include <iostream>
-#include "particle.cc"
-#include <random>
-#include <vector>
-#include <cmath>
-#include <valarray>
-#include <array>
-#include "parameters.h"
-// #include "functions.cc"
+#include "functions.h"
 
 void printVector(std::vector<double> vector)
 {
@@ -28,9 +20,10 @@ int main(int argc, char const *argv[])
     const double Bx = parameters::bx;
     const double By = parameters::by;
     const int gridPoints = parameters::gp;
-    const double dr = L / gridPoints;
+    const double dr = L / double(gridPoints - 1);
     const int steps = parameters::steps;
     const double dt = parameters::dt;
+    std::valarray<double> B = {Bx, By};
 
     if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
     {
@@ -42,8 +35,8 @@ int main(int argc, char const *argv[])
     double margin = dr / 10.0;
 
     std::mt19937_64 engine;
-    std::normal_distribution<double> maxwell_right(vd, vt);
-    std::normal_distribution<double> maxwell_left(-vd, vt);
+    std::normal_distribution<double> maxwell_right(-vd, vt);
+    std::normal_distribution<double> maxwell_left(vd, vt);
     std::vector<std::valarray<double>> pos;
 
     double deltaL = (L - 2.0 * margin) / (std::sqrt(N) - 1);
@@ -67,7 +60,7 @@ int main(int argc, char const *argv[])
         indexes.push_back(i);
     }
 
-    std::random_shuffle(indexes.begin(), indexes.end());
+    // std::random_shuffle(indexes.begin(), indexes.end());
 
     for (int i = N-1; i >= int(3*N/4); --i)
     {
@@ -87,18 +80,45 @@ int main(int argc, char const *argv[])
     }
     for (auto i = left.begin(); i != left.end(); ++i)
     {
-        parts.push_back(Particle(pos[*i], {maxwell_left(engine), 0.0}, n, -1.0, true));
+        // parts.push_back(Particle(pos[*i], {maxwell_left(engine), 0.0}, n, -1.0, true));
+        parts.push_back(Particle(pos[*i], {0.02, 0.0}, n, -1.0, true));
     }    
     for (auto i = right.begin(); i != right.end(); ++i)
     {
-        parts.push_back(Particle(pos[*i], {maxwell_right(engine), 0.0}, n, -1.0, true));
+        // parts.push_back(Particle(pos[*i], {maxwell_right(engine), 0.0}, n, -1.0, true));
+        parts.push_back(Particle(pos[*i], {-0.02, 0.0}, n, -1.0, true));
     }
+
 
     std::vector<double> rho_c;
 
     for (int i = 0; i < N; ++i)
     {
         rho_c.push_back(parts[i].q_ / (dr * dr));
+    }
+
+    // for (int p = 0; p < N; ++p)
+    // {
+    //     std::cout << parts[p].velocity_[0] << " " << parts[p].velocity_[1] << std::endl;
+    // }
+    std::vector<Particle> finalParts;
+
+    for (int i = 0; i < steps; ++i)
+    {
+        VecVal RHO = density(parts, rho_c, dr);
+        VecVal PHI = potential(RHO, dr);
+        VecVecVal EFIELDn = EField_GP(PHI, dr);
+        VecVal EFIELDp = EField_P(EFIELDn, parts, dr);
+
+        if (i == 0)
+        {
+            rewind(-1.0, EFIELDp, B, parts);
+        }
+
+        Boris(EFIELDp, B, parts);
+        finalParts = parts;
+        rewind(1.0, EFIELDp, B, finalParts);
+
     }
 
     return 0;

@@ -1,9 +1,9 @@
 import numpy
 
-def density1(parts, gp, dr, rho_c):
+def density1(particles, gp, dr, rho_c):
     rho = numpy.zeros(shape=(gp, gp))
 
-    pos = numpy.array([p.pos for p in parts])
+    pos = numpy.array([p.pos for p in particles])
     node = numpy.array(pos / dr, dtype=int)
 
     h = pos - node*dr
@@ -32,15 +32,15 @@ def density1(parts, gp, dr, rho_c):
 
     return rho
 
-def density2(parts, gp, dr, rho_c):
+def density2(particles, gp, dr, rho_c):
     rho = numpy.zeros(shape=(gp, gp))
 
-    for ind, p in enumerate(parts):
-        i = int(p.pos[0] / dr)
-        j = int(p.pos[1] / dr)
+    for ind, p in enumerate(particles):
+        i = int(particles[ind].pos[0] / dr)
+        j = int(particles[ind].pos[1] / dr)
 
-        hx = p.pos[0] - (i * dr)
-        hy = p.pos[1] - (j * dr)
+        hx = particles[ind].pos[0] - (i * dr)
+        hy = particles[ind].pos[1] - (j * dr)
 
         # rho_c = p.q / (dr * dr)
 
@@ -79,7 +79,7 @@ def potential(rho, gp, dr):
     phi = numpy.fft.ifft2(phi_k)
     phi = numpy.real(phi)
 
-    return phi, phi_k, rho_k
+    return phi
 
 def Efield_GP(phi, gp, dr):
     E = numpy.zeros(shape=(gp, gp, 2))
@@ -100,11 +100,11 @@ def Efield_GP(phi, gp, dr):
 
     return E
 
-def Efield_P(field, parts, dr):
-    E = numpy.zeros(shape=(len(parts), 2))
+def Efield_P(field, particles, dr):
+    E = numpy.zeros(shape=(len(particles), 2))
 
     index = 0
-    for p in parts:
+    for p in particles:
         if p.move:
             i = int(p.pos[0] / dr)
             j = int(p.pos[1] / dr)
@@ -120,9 +120,9 @@ def Efield_P(field, parts, dr):
 
     return E
 
-def Boris(E, B, parts, L, dt):
+def Boris(E, B, particles, L, dt):
     index = 0
-    for p in parts:
+    for p in particles:
         if p.move:
             t = 0.5 * (p.qm) * B * dt
             t_2 = numpy.linalg.norm(t) * numpy.linalg.norm(t)
@@ -138,11 +138,9 @@ def Boris(E, B, parts, L, dt):
 
         index += 1
 
-    return parts
-
-def leapfrog(E, parts, L, dt):
+def leapfrog(E, particles, L, dt):
     index = 0
-    for p in parts:
+    for p in particles:
         if p.move:
             p.vel += (p.qm) * E[index] * dt
             p.pos += p.vel * dt
@@ -150,20 +148,20 @@ def leapfrog(E, parts, L, dt):
             p.pos = p.pos % L
 
         index += 1
-    return parts
+    return particles
 
-# def rewind(direction, E, parts, dt):
+# def rewind(direction, E, particles, dt):
 #     index = 0
-#     for p in parts:
+#     for p in particles:
 #         if p.move:
 #             p.vel += direction * 0.5 * (p.qm) * E[index] * dt
 #         index += 1
-#     return parts
+#     return particles
 
-def rewind(direction, E, B, parts, dt):
-    dt = dt * 0.5
+def rewind(direction, E, B, particles, dt):
+    dt = direction * dt * 0.5
     index = 0
-    for p in parts:
+    for p in particles:
         if p.move:
             t = 0.5 * (p.qm) * B * dt
             t_2 = numpy.linalg.norm(t) * numpy.linalg.norm(t)
@@ -171,8 +169,6 @@ def rewind(direction, E, B, parts, dt):
             v_minus = p.vel + 0.5 * (p.qm) * E[index] * dt
             v_prime = v_minus + numpy.cross(v_minus, t)
             v_plus = v_minus + numpy.cross(v_prime, s)
-            p.vel = direction * (v_plus + 0.5 * (p.qm) * E[index] * dt)
+            p.vel = v_plus + 0.5 * (p.qm) * E[index] * dt
 
         index += 1
-
-    return parts
