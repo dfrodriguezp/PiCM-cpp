@@ -1,37 +1,32 @@
 import numpy
 from matplotlib import pyplot
-from matplotlib.backends.backend_pdf import PdfPages
 import click
 import json
 
 @click.command()
 @click.argument("file")
-def plot(file):
+def main(file):
     with open(file) as json_data:
         d = json.load(json_data)
-    Ek, EF, t = numpy.loadtxt(d["directory"] + "/energies/energies.dat", unpack=True)
+    t, KE, FE = numpy.loadtxt(d["Directory"] + "/energy/energy.dat", unpack=True)
     
-    # pp = PdfPages(d["directory"] + "/energies.pdf")
-
-    pyplot.figure()
-    pyplot.plot(t[:1000], Ek[:1000]/max(Ek[:1000]), "--o", ms=2)
+    pyplot.figure(figsize=(12, 9))
+    pyplot.suptitle("Kinetic Energy", fontsize=25)
+    pyplot.plot(t*0.1, KE, "--o", ms=2)
     pyplot.ylabel("$E_k$ [au]", size=20)
-    pyplot.xlabel("$Steps$", size=20)
-    pyplot.tight_layout()
+    pyplot.xlabel(r"$\omega_{pe}t$", size=20)
     pyplot.grid()
-    pyplot.savefig("%s/E_k.jpg" %(d["directory"]))
-    # pyplot.savefig(pp, format="pdf")
-
-    pyplot.figure()
-    pyplot.plot(t[:1000], EF[:1000]/max(EF[:1000]), "--o", ms=2)
-    pyplot.ylabel("$E_F$ [au]", size=20)
-    pyplot.xlabel("$Steps$", size=20)
-    pyplot.tight_layout()
-    pyplot.grid()
-    pyplot.savefig("%s/E_F.jpg" %(d["directory"]))
-    # pyplot.savefig(pp, format="pdf")
-
+    pyplot.savefig("{}/Kinetic Energy.pdf".format(d["Directory"]))
     pyplot.close()
-    # pp.close()
+
+    pyplot.figure(figsize=(12, 9))
+    pyplot.suptitle("Electric Field Energy", fontsize=25)
+    pyplot.plot(t*0.1, FE, "--o", ms=2)
+    pyplot.ylabel("$E_F$ [au]", size=20)
+    pyplot.xlabel(r"$\omega_{pe}t$", size=20)
+    pyplot.grid()
+    pyplot.savefig("{}/Field Energy.pdf".format(d["Directory"]))
+    pyplot.close()
+
 if __name__ == '__main__':
-    plot()
+    main()

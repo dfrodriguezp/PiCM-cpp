@@ -5,7 +5,7 @@ typedef std::vector<std::vector<std::valarray<double>>> VecVecVal;
 typedef std::complex<double> Complex;
 typedef std::valarray<Complex> CArray;
 
-VecVal valarraysVector(const int rows, const int cols)
+VecVal valarraysVector(const int& rows, const int& cols)
 {
     VecVal f;
     std::valarray<double> zeros(0.0, cols);
@@ -17,7 +17,7 @@ VecVal valarraysVector(const int rows, const int cols)
     return f;
 }
 
-VecVal density(std::vector<Particle> parts, std::vector<double> rho_c, const double dr)
+VecVal density(std::vector<Particle>& particles, const std::vector<double>& rho_c, const double& dr)
 {
     const int gp = parameters::gp;
     const int N = parameters::N;
@@ -25,10 +25,10 @@ VecVal density(std::vector<Particle> parts, std::vector<double> rho_c, const dou
 
     for (int p = 0; p < N; ++p)
     {
-        int i = std::floor(parts[p].position_[0] / dr);
-        int j = std::floor(parts[p].position_[1] / dr);
-        double hx = parts[p].position_[0] - (i * dr);
-        double hy = parts[p].position_[1] - (j * dr);
+        int i = std::floor(particles[p].position_[0] / dr);
+        int j = std::floor(particles[p].position_[1] / dr);
+        double hx = particles[p].position_[0] - (i * dr);
+        double hy = particles[p].position_[1] - (j * dr);
 
         rho[i][j] += rho_c[p] * (dr - hx) * (dr - hy);
         rho[i][j+1] += rho_c[p] * (dr - hx) * hy;
@@ -56,7 +56,7 @@ VecVal density(std::vector<Particle> parts, std::vector<double> rho_c, const dou
     return rho;
 }
 
-VecVal potential(VecVal rho, const double dr)
+VecVal potential(const VecVal& rho, const double& dr)
 {   
     const int gp = parameters::gp;
     Complex rho_k[gp][gp];
@@ -165,11 +165,11 @@ VecVal potential(VecVal rho, const double dr)
     return phi;
 }
 
-VecVecVal EField_GP(VecVal phi, const double dr)
+VecVecVal EField_GP(const VecVal& phi, const double& dr)
 {
     const int gp = parameters::gp;
     VecVecVal E;
-    std::valarray<double> zeros(0.0, 2);
+    std::valarray<double> zeros(0.0, 3);
     for (int i = 0; i < gp; ++i)
     {   
         VecVal rows;
@@ -205,21 +205,21 @@ VecVecVal EField_GP(VecVal phi, const double dr)
     return E;
 }
 
-VecVal EField_P(VecVecVal field, std::vector<Particle> parts, const double dr)
+VecVal EField_P(const VecVecVal& field, const std::vector<Particle>& particles, const double& dr)
 {
     const int N = parameters::N;
-    VecVal E = valarraysVector(N, 2);
+    VecVal E = valarraysVector(N, 3);
 
     int index = 0;
 
     for (int p = 0; p < N; ++p)
     {
-        if (parts[p].move_)
+        if (particles[p].move_)
         {
-            int i = std::floor(parts[p].position_[0] / dr);
-            int j = std::floor(parts[p].position_[1] / dr);
-            double hx = parts[p].position_[0] - (i * dr);
-            double hy = parts[p].position_[1] - (j * dr);
+            int i = std::floor(particles[p].position_[0] / dr);
+            int j = std::floor(particles[p].position_[1] / dr);
+            double hx = particles[p].position_[0] - (i * dr);
+            double hy = particles[p].position_[1] - (j * dr);
 
             double A = (dr - hx) * (dr - hy);
             double B = (dr - hx) * hy;
@@ -240,25 +240,25 @@ VecVal EField_P(VecVecVal field, std::vector<Particle> parts, const double dr)
     return E;
 }
 
-inline double norm(std::valarray<double> Array)
+double norm(const std::valarray<double>& Array)
 {
     return std::sqrt((Array * Array).sum());
 }
 
-inline double cross(std::valarray<double> A, std::valarray<double> B)
+inline std::valarray<double> cross(const std::valarray<double>& A, const std::valarray<double>& B)
 {
-    return (A[0] * B[1]) - (A[1] * B[0]);
+    return {A[1] * B[2] - A[2] * B[1], A[2] * B[0] - A[0] * B[2], A[0] * B[1] - A[1] * B[0]};
 }
 
-inline double mod(double a, double b)
+inline double mod(const double& a, const double& b)
 {
     return (a < 0) ? std::fmod((a + (std::floor(-a / b) + 1) * b), b) : (std::fmod(a, b));
 }
 
-void Boris(VecVal E, std::valarray<double> B, std::vector<Particle>& parts)
+void Boris(const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& particles)
 {
     int index = 0;
-    const double L = parameters::L;
+    const double L = parameters::dr * double(parameters::gp - 1);
     const double dt = parameters::dt;
     const int N = parameters::N;
     std::valarray<double> t;
@@ -270,25 +270,27 @@ void Boris(VecVal E, std::valarray<double> B, std::vector<Particle>& parts)
 
     for (int p = 0; p < N; ++p)
     {
-        if (parts[p].move_)
+        if (particles[p].move_)
         {
-            t = 0.5 * (parts[p].qm_) * B * dt;
+            t = 0.5 * (particles[p].qm_) * B * dt;
             t_2 = norm(t) * norm(t);
             s = (2.0 * t) / (1.0 + t_2);
-            v_minus = parts[p].velocity_ + 0.5 * (parts[p].qm_) * E[index] * dt;
+            v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
+            // v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * (extE) * dt;
             v_prime = v_minus + cross(v_minus, t);
             v_plus = v_minus + cross(v_prime, s);
-            parts[p].velocity_ = v_plus + 0.5 * (parts[p].qm_) * E[index] * dt;
+            particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
+            // particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * (extE) * dt;
 
-            parts[p].position_ += parts[p].velocity_ * dt;
-            parts[p].position_[0] = mod(parts[p].position_[0], L);
-            parts[p].position_[1] = mod(parts[p].position_[1], L);
+            particles[p].position_ += particles[p].velocity_ * dt;
+            particles[p].position_[0] = mod(particles[p].position_[0], L);
+            particles[p].position_[1] = mod(particles[p].position_[1], L);
         }
         index++;
     }
 }
 
-void rewind(const double direction, VecVal E, std::valarray<double> B, std::vector<Particle>& parts)
+void rewind(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& particles)
 {
     int index = 0;
     const double dt = direction * 0.5 * parameters::dt;
@@ -302,15 +304,17 @@ void rewind(const double direction, VecVal E, std::valarray<double> B, std::vect
 
     for (int p = 0; p < N; ++p)
     {
-        if (parts[p].move_)
+        if (particles[p].move_)
         {
-            t = 0.5 * (parts[p].qm_) * B * dt;
+            t = 0.5 * (particles[p].qm_) * B * dt;
             t_2 = norm(t) * norm(t);
             s = (2.0 * t) / (1.0 + t_2);
-            v_minus = parts[p].velocity_ + 0.5 * (parts[p].qm_) * E[index] * dt;
+            v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
+            // v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * (extE) * dt;
             v_prime = v_minus + cross(v_minus, t);
             v_plus = v_minus + cross(v_prime, s);
-            parts[p].velocity_ = v_plus + 0.5 * (parts[p].qm_) * E[index] * dt;
+            particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
+            // particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * (extE) * dt;
         }
         index++;
     }
