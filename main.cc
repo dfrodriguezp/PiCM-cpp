@@ -3,31 +3,23 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 
 int main(int argc, char const *argv[])
 {
     srand(parameters::seed);
+    std::vector<Particle> parts;
     const int N = parameters::N;
-    const double vt1 = parameters::vt1;
-    const double vt2 = parameters::vt2;
-    const double vd = parameters::vd;
-    const double R = parameters::R;
-
-    const double Bx = parameters::Bx;
-    const double By = parameters::By;
-    const double Bz = parameters::Bz;
-    const double Ex = parameters::Ex;
-    const double Ey = parameters::Ey;
-    const double Ez = parameters::Ez;
-
     const int gridPoints = parameters::gp;
     const double dr = parameters::dr;
-    const double L = dr * double(gridPoints - 1);
     const int steps = parameters::steps;
     const double dt = parameters::dt;
 
+    // External magnetic field
+    const double Bx = parameters::Bx;
+    const double By = parameters::By;
+    const double Bz = parameters::Bz;
     std::valarray<double> B = {Bx, By, Bz};
-    std::valarray<double> E = {Ex, Ey, Ez};
 
     if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
     {
@@ -35,63 +27,14 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    double n = N / (L * L);
-    double margin = dr / 10.0;
-
-    std::mt19937_64 engine;
-    std::normal_distribution<double> maxwell_right(vd, vt1);
-    // std::normal_distribution<double> maxwell_left(-vd, vt);
-    std::normal_distribution<double> maxwell_left(0.0, vt2);
-    std::vector<std::valarray<double>> pos;
-
-    double deltaL = (L - 2.0 * margin) / (std::sqrt(N) - 1);
-
-    for (double x = margin; x <= L; x += deltaL)
+    if (parameters::system == "two stream")
     {
-        for (double y = margin; y <= L; y += deltaL)
-        {
-            pos.push_back({x, y, 0.0});
-        }
+        parts = two_stream();
     }
-
-    std::vector<double> indexes;
-    std::vector<double> right;
-    std::vector<double> left;
-    std::vector<Particle> parts;
-
-    for (int i = 0; i < N; ++i)
+    else if (parameters::system == "random")
     {
-        indexes.push_back(i);
+        parts = random_particles();    
     }
-
-    std::random_shuffle(indexes.begin(), indexes.end());
-    int electronBeam = std::floor((N / 2) * R);
-
-    for (int i = N-1; i >= N-electronBeam; --i)
-    {
-        right.push_back(indexes[i]);
-        indexes.pop_back();
-    }
-
-    for (int i = N-electronBeam-1; i >= int(N/2); --i)
-    {
-        left.push_back(indexes[i]);
-        indexes.pop_back();
-    }
-
-    for (auto i = indexes.begin(); i != indexes.end(); ++i)
-    {
-        parts.push_back(Particle(pos[*i], {0.0, 0.0, 0.0}, n, 1.0, false));
-    }
-    for (auto i = left.begin(); i != left.end(); ++i)
-    {
-        parts.push_back(Particle(pos[*i], {maxwell_left(engine), 0.0, 0.0}, n, -1.0, true));
-    }    
-    for (auto i = right.begin(); i != right.end(); ++i)
-    {
-        parts.push_back(Particle(pos[*i], {maxwell_right(engine), 0.0, 0.0}, n, -1.0, true));
-    }
-
 
     std::vector<double> rho_c;
 
@@ -101,7 +44,7 @@ int main(int argc, char const *argv[])
     }
 
     std::string mainFolder = parameters::folder;
-    std::string directory = "/home/daniel/Desktop/Cpp_PIC/" + mainFolder;
+    std::string directory = "../" + mainFolder;
     std::vector<std::string> folders = {"/space", "/phaseSpace", "/velocities", "/rho", "/phi", "/Efield", "/energy"};
     
     for (int f = 0; f < folders.size(); ++f)
@@ -127,12 +70,12 @@ int main(int argc, char const *argv[])
 
         if (step == 0)
         {
-            rewind(-1.0, EFIELDp, E, B, parts);
+            rewind(-1.0, EFIELDp, B, parts);
         }
 
-        Boris(EFIELDp, E, B, parts);
+        Boris(EFIELDp, B, parts);
         finalParts = parts;
-        rewind(1.0, EFIELDp, E, B, finalParts);
+        rewind(1.0, EFIELDp, B, finalParts);
 
         std::ofstream phaseSpace;
         std::ofstream space;
@@ -157,7 +100,7 @@ int main(int argc, char const *argv[])
             {
                 phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
                 space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
-                velocities << finalParts[p].velocity_[0] << " " << finalParts[p].velocity_[1] << "\n";
+                velocities << finalParts[p].velocity_[0] << " " << finalParts[p].velocity_[1] << " " << finalParts[p].velocity_[2] << "\n";
                 KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);
             }          
         }
@@ -174,6 +117,7 @@ int main(int argc, char const *argv[])
                 FE += RHO[i][j] * PHI[i][j];
             }
         }
+
         FE *= 0.5;
 
         energy << step << " " << KE << " " << FE << "\n";
@@ -191,8 +135,10 @@ int main(int argc, char const *argv[])
             diff = double(t_1 - t_0);
             simulationTime = (diff / CLOCKS_PER_SEC);
         }
+
         std::cout << "Aproximate time remaining: " << simulationTime * (steps - step) << " seconds." << std::endl;
     }
+    
     energy.close();  
 
     std::cout << "Simulation finished." << std::endl; 

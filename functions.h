@@ -16,6 +16,8 @@ typedef std::valarray<Complex> CArray;
 typedef std::vector<std::valarray<double>> VecVal;
 typedef std::vector<std::vector<std::valarray<double>>> VecVecVal;
 
+std::vector<Particle> two_stream();
+std::vector<Particle> random_particles();
 void fft(CArray& x);
 void ifft(CArray& x);
 VecVal valarraysVector(const int& rows, const int& cols);
@@ -26,7 +28,7 @@ VecVal EField_P(const VecVecVal& field, const std::vector<Particle>& parts, cons
 double norm(const std::valarray<double>& Array);
 inline std::valarray<double> cross(const std::valarray<double>& A, const std::valarray<double>& B);
 inline double mod(const double& a, const double& b);
-void Boris(const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& parts);
-void rewind(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& parts);
+void Boris(const VecVal& E, const std::valarray<double>& B, std::vector<Particle>& parts);
+void rewind(const double& direction, const VecVal& E, const std::valarray<double>& B, std::vector<Particle>& parts);
 
 #endif
