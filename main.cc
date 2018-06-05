@@ -51,7 +51,9 @@ int main(int argc, char const *argv[])
     }
 
     std::string mainFolder = parameters::folder;
-    std::string directory = "../" + mainFolder;
+
+    // This works on a Linux OS.
+    std::string directory = "~/Desktop/" + mainFolder;
     std::vector<std::string> folders = {"/space", "/phaseSpace", "/velocities", "/rho", "/phi", "/Efield", "/energy"};
     
     for (int f = 0; f < folders.size(); ++f)
