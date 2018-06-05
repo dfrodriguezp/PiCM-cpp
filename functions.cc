@@ -102,12 +102,12 @@ std::vector<Particle> random_particles()
     {
         if (i < (N / 2))
         {
-            parts.push_back(Particle({posi(engine), posi(engine), 0.0}, {vel(engine), vel(engine), 0.0}, n, 1.0, true));      
+            parts.push_back(Particle({posi(engine), posi(engine), 0.0}, {0.0, 0.0, 0.0}, n, 1.0, true));
         }
 
         else
         {
-            parts.push_back(Particle({posi(engine), posi(engine), 0.0}, {vel(engine), vel(engine), 0.0}, n, -1.0, true));  
+            parts.push_back(Particle({posi(engine), posi(engine), 0.0}, {0.0, 0.0, 0.0}, n, -1.0, true));
         }
     }
 
@@ -352,7 +352,7 @@ inline double mod(const double& a, const double& b)
     return (a < 0) ? std::fmod((a + (std::floor(-a / b) + 1) * b), b) : (std::fmod(a, b));
 }
 
-void Boris(const VecVal& E, const std::valarray<double>& B, std::vector<Particle>& particles)
+void Boris(const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& particles)
 {
     int index = 0;
     const double L = parameters::dr * double(parameters::gp - 1);
@@ -372,10 +372,10 @@ void Boris(const VecVal& E, const std::valarray<double>& B, std::vector<Particle
             t = 0.5 * (particles[p].qm_) * B * dt;
             t_2 = norm(t) * norm(t);
             s = (2.0 * t) / (1.0 + t_2);
-            v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * E[index] * dt;
+            v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
             v_prime = v_minus + cross(v_minus, t);
             v_plus = v_minus + cross(v_prime, s);
-            particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * E[index] * dt;
+            particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
 
             particles[p].position_ += particles[p].velocity_ * dt;
             particles[p].position_[0] = mod(particles[p].position_[0], L);
@@ -385,7 +385,7 @@ void Boris(const VecVal& E, const std::valarray<double>& B, std::vector<Particle
     }
 }
 
-void rewind(const double& direction, const VecVal& E, const std::valarray<double>& B, std::vector<Particle>& particles)
+void rewind(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& particles)
 {
     int index = 0;
     const double dt = direction * 0.5 * parameters::dt;
@@ -404,10 +404,10 @@ void rewind(const double& direction, const VecVal& E, const std::valarray<double
             t = 0.5 * (particles[p].qm_) * B * dt;
             t_2 = norm(t) * norm(t);
             s = (2.0 * t) / (1.0 + t_2);
-            v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * E[index] * dt;
+            v_minus = particles[p].velocity_ + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
             v_prime = v_minus + cross(v_minus, t);
             v_plus = v_minus + cross(v_prime, s);
-            particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * E[index] * dt;
+            particles[p].velocity_ = v_plus + 0.5 * (particles[p].qm_) * (E[index] + extE) * dt;
         }
         index++;
     }

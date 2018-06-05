@@ -2,7 +2,7 @@
 #define PARTICLE
 
 #include <valarray>
-
+#include <string>
 struct Particle
 {
     std::valarray<double> position_;

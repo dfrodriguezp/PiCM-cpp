@@ -12,15 +12,16 @@ def plot_Efield(file, n):
         d = json.load(json_data)
    
     E_field = []
-    to_plot = [step for step in numpy.arange(0, d["steps"], d["steps"] / n, dtype=int)]
-
-    for t in to_plot:
+    # toPlot = [step for step in numpy.arange(0, d["steps"], d["steps"] / n, dtype=int)]
+    toPlot = numpy.array([0, 20, 28, 39, 90]) / d["dt"]
+    toPlot = numpy.array(toPlot, dtype=int)
+    for t in toPlot:
         data = numpy.loadtxt("{}/Efield/step{}.dat".format(d["Directory"], t), unpack=True)
         E_field.append(data)
 
-    pp = PdfPages("{}/Electric_Field.pdf".format(d["Directory"]))
-    pp1 = PdfPages("{}/E_x.pdf".format(d["Directory"]))
-    pp2 = PdfPages("{}/E_y.pdf".format(d["Directory"]))
+    # pp = PdfPages("{}/Electric_Field.pdf".format(d["Directory"]))
+    # pp1 = PdfPages("{}/E_x.pdf".format(d["Directory"]))
+    # pp2 = PdfPages("{}/E_y.pdf".format(d["Directory"]))
 
     Ex_only = []
     Ey_only = []
@@ -45,66 +46,69 @@ def plot_Efield(file, n):
 
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", 0.1*j*(d["steps"]/n)), fontsize=25, y=0.99)
+        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", d["dt"]*toPlot[j]), fontsize=25, y=0.99)
         colors = ax.pcolormesh(x, y, Etotal, cmap="jet", shading="gouraud")
         bar = fig.colorbar(colors, ax=ax)
-        bar.set_label(r"$E \left(x,y \right) \left(e / m_{e} \omega_p v_{th} \right)$", fontsize=20)
+        bar.set_label(r"$E \left(x,y \right) \left(e / m_{e} \omega_{pe} v_{th} \right)$", fontsize=20)
         colors.set_clim(numpy.min(Etotal_only), numpy.max(Etotal_only))
-        # ax.quiver(x[::10], y[::10], Ex[::10], Ey[::10], pivot="tail")
         ax.set_xlabel(r"$x / \lambda_{D}$", fontsize=20)
         ax.set_ylabel(r"$y / \lambda_{D}$", fontsize=20)
-        ax.set_ylim(0, d["gp"]-1)
-        ax.set_xlim(0, d["gp"]-1)
+        ax.set_ylim(0, d["L"])
+        ax.set_xlim(0, d["L"])
         ax.set_aspect("equal")
-        pyplot.savefig(pp, format="pdf")
+        pyplot.savefig("{}/Efield_wpt_{}.png".format(d["Directory"], d["dt"]*toPlot[j]), dpi=300)
+        # pyplot.savefig(pp, format="pdf")
         pyplot.close()
 
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", 0.1*j*(d["steps"]/n)), fontsize=25, y=0.99)
+        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", d["dt"]*toPlot[j]), fontsize=25, y=0.99)
         colors = ax.pcolormesh(x, y, Ex, cmap="jet", shading="gouraud")
         bar = fig.colorbar(colors, ax=ax)
-        bar.set_label(r"$E_{x} \left(x,y \right) \left(e / m_{e} \omega_p v_{th} \right)$", fontsize=20)
+        bar.set_label(r"$E_{x} \left(x,y \right) \left(e / m_{e} \omega_{pe} v_{th} \right)$", fontsize=20)
         colors.set_clim(numpy.min(Ex_only), numpy.max(Ex_only))
         ax.set_xlabel(r"$x / \lambda_{D}$", fontsize=20)
         ax.set_ylabel(r"$y / \lambda_{D}$", fontsize=20)
-        ax.set_ylim(0, d["gp"]-1)
-        ax.set_xlim(0, d["gp"]-1)
+        ax.set_ylim(0, d["L"])
+        ax.set_xlim(0, d["L"])
         ax.set_aspect("equal")
-        pyplot.savefig(pp1, format="pdf")
+        pyplot.savefig("{}/Ex_wpt_{}.png".format(d["Directory"], d["dt"]*toPlot[j]), dpi=300)
+        # pyplot.savefig(pp1, format="pdf")
         pyplot.close()
 
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", 0.1*j*(d["steps"]/n)), fontsize=25, y=0.99)
+        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", d["dt"]*toPlot[j]), fontsize=25, y=0.99)
         colors = ax.pcolormesh(x, y, Ey, cmap="jet", shading="gouraud")
         bar = fig.colorbar(colors, ax=ax)
-        bar.set_label(r"$E_{y} \left(x,y \right) \left(e / m_{e} \omega_p v_{th} \right)$", fontsize=20)
+        bar.set_label(r"$E_{y} \left(x,y \right) \left(e / m_{e} \omega_{pe} v_{th} \right)$", fontsize=20)
         colors.set_clim(numpy.min(Ey_only), numpy.max(Ey_only))
         ax.set_xlabel(r"$x / \lambda_{D}$", fontsize=20)
         ax.set_ylabel(r"$y / \lambda_{D}$", fontsize=20)
-        ax.set_ylim(0, d["gp"]-1)
-        ax.set_xlim(0, d["gp"]-1)
+        ax.set_ylim(0, d["L"])
+        ax.set_xlim(0, d["L"])
         ax.set_aspect("equal")
-        pyplot.savefig(pp2, format="pdf")
+        pyplot.savefig("{}/Ey_wpt_{}.png".format(d["Directory"], d["dt"]*toPlot[j]), dpi=300)
+        # pyplot.savefig(pp2, format="pdf")
         pyplot.close()
 
-    pp1.close()
-    pp2.close()
-    pp.close()
+    # pp1.close()
+    # pp2.close()
+    # pp.close()
 
 def plot_phi(file, n):
     with open(file) as json_data:
         d = json.load(json_data)
     
     Potential = []
-    to_plot = [step for step in numpy.arange(0, d["steps"], d["steps"] / n, dtype=int)]  
-
-    for t in to_plot:
+    # toPlot = [step for step in numpy.arange(0, d["steps"], d["steps"] / n, dtype=int)]  
+    toPlot = numpy.array([0, 20, 28, 39, 90]) / d["dt"]
+    toPlot = numpy.array(toPlot, dtype=int)    
+    for t in toPlot:
         data = numpy.loadtxt("{}/phi/step{}.dat".format(d["Directory"], t), unpack=True)
         Potential.append(data)
 
-    pp = PdfPages("{}/Electric_Potential.pdf".format(d["Directory"]))
+    # pp = PdfPages("{}/Electric_Potential.pdf".format(d["Directory"]))
     phi_only = []
 
     for j in range(len(Potential)):
@@ -118,29 +122,31 @@ def plot_phi(file, n):
 
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", 0.1*j*(d["steps"]/n)), fontsize=25, y=0.99)
+        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", d["dt"]*toPlot[j]), fontsize=25, y=0.99)
         colors = ax.pcolormesh(x, y, phi, cmap="jet", shading="gouraud")
         bar = fig.colorbar(colors, ax=ax)
         bar.set_label(r"$\phi \left(x,y \right) \left(e / kT \right)$", fontsize=20)
         colors.set_clim(numpy.min(phi_only), numpy.max(phi_only))
         ax.set_xlabel(r"$x / \lambda_{D}$", fontsize=20)
         ax.set_ylabel(r"$y / \lambda_{D}$", fontsize=20)
-        ax.set_ylim(0, d["gp"]-1)
-        ax.set_xlim(0, d["gp"]-1)
+        ax.set_ylim(0, d["L"])
+        ax.set_xlim(0, d["L"])
         ax.set_aspect("equal")
-        pyplot.savefig(pp, format="pdf")
+        pyplot.savefig("{}/phi_wpt_{}.png".format(d["Directory"], d["dt"]*toPlot[j]), dpi=300)
+        # pyplot.savefig(pp, format="pdf")
         pyplot.close()
 
-    pp.close()   
+    # pp.close()   
 
 def plot_rho(file, n):
     with open(file) as json_data:
         d = json.load(json_data)
     density = []
 
-    to_plot = [step for step in numpy.arange(0, d["steps"], d["steps"]/n, dtype=int)]  
-
-    for t in to_plot:
+    # toPlot = [step for step in numpy.arange(0, d["steps"], d["steps"]/n, dtype=int)]  
+    toPlot = numpy.array([0, 20, 28, 39, 90]) / d["dt"]
+    toPlot = numpy.array(toPlot, dtype=int)   
+    for t in toPlot:
         data = numpy.loadtxt("{}/rho/step{}.dat".format(d["Directory"], t), unpack=True)
         density.append(data)
 
@@ -158,20 +164,21 @@ def plot_rho(file, n):
 
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", 0.1*j*(d["steps"]/n)), fontsize=25, y=0.99)
+        pyplot.suptitle(r"$\omega_{}t={:.1f}$".format("{pe}", d["dt"]*toPlot[j]), fontsize=25, y=0.99)
         colors = ax.pcolormesh(x, y, rho, cmap="jet", shading="gouraud")
         bar = fig.colorbar(colors, ax=ax)
         bar.set_label(r"$\rho(x, y)$", fontsize=20)
         colors.set_clim(numpy.min(rho_only), numpy.max(rho_only))
         ax.set_xlabel(r"$x / \lambda_{D}$", fontsize=20)
         ax.set_ylabel(r"$y / \lambda_{D}$", fontsize=20)
-        ax.set_ylim(0, d["gp"]-1)
-        ax.set_xlim(0, d["gp"]-1)
+        ax.set_ylim(0, d["L"])
+        ax.set_xlim(0, d["L"])
         ax.set_aspect("equal")
-        pyplot.savefig(pp, format="pdf")
+        pyplot.savefig("{}/rho_wpt_{}.png".format(d["Directory"], d["dt"]*toPlot[j]), dpi=300)
+        # pyplot.savefig(pp, format="pdf")
         pyplot.close()
         
-    pp.close()    
+    # pp.close()    
 
 @click.command()
 @click.option("--n", type=int)

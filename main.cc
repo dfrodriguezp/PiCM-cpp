@@ -19,13 +19,20 @@ int main(int argc, char const *argv[])
     const double Bx = parameters::Bx;
     const double By = parameters::By;
     const double Bz = parameters::Bz;
-    std::valarray<double> B = {Bx, By, Bz};
 
-    if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
-    {
-        std::cout << "Something went wrong: N must be a power of 2." << std::endl;
-        return 1;
-    }
+    // External electric field
+    const double Ex = parameters::Ex;
+    const double Ey = parameters::Ey;
+    const double Ez = parameters::Ez;
+
+    std::valarray<double> B = {Bx, By, Bz};
+    std::valarray<double> E;
+
+    // if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
+    // {
+    //     std::cout << "Something went wrong: N must be a power of 2." << std::endl;
+    //     return 1;
+    // }
 
     if (parameters::system == "two stream")
     {
@@ -68,14 +75,24 @@ int main(int argc, char const *argv[])
         VecVecVal EFIELDn = EField_GP(PHI, dr);
         VecVal EFIELDp = EField_P(EFIELDn, parts, dr);
 
-        if (step == 0)
+        if (step < int(0.2 * steps)) 
         {
-            rewind(-1.0, EFIELDp, B, parts);
+            E = {Ex, Ey, Ez};
         }
 
-        Boris(EFIELDp, B, parts);
+        else
+        {
+            E = {0.0, 0.0, 0.0};
+        }
+
+        if (step == 0)
+        {
+            rewind(-1.0, EFIELDp, E, B, parts);
+        }
+
+        Boris(EFIELDp, E, B, parts);
         finalParts = parts;
-        rewind(1.0, EFIELDp, B, finalParts);
+        rewind(1.0, EFIELDp, E, B, finalParts);
 
         std::ofstream phaseSpace;
         std::ofstream space;
