@@ -16,4 +16,5 @@ void writeSpace(std::string filename, const int N, const int steps, )
 	dataspace_id = H5Screate_simple(RANK, dims, NULL);
 	dataset_id = H5Dcreate2(file_id, "space", H5T_IEEE_F64BE, dataspace_id,
 							H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	hola
 }
