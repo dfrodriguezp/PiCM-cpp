@@ -28,6 +28,14 @@ int main(int argc, char const *argv[])
     std::valarray<double> B = {Bx, By, Bz};
     std::valarray<double> E;
 
+    std::vector<std::vector<double>> space;
+    const double velocities[N][2*steps];
+    const double mesh[gridPoints][gridPoints];
+    const double rho[gridPoints*gridPoints][steps];
+    const double phi[gridPoints*gridPoints][steps];
+    const double field[gridPoints*gridPoints][steps*2];
+    const double energy[steps][2];
+
     // if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
     // {
     //     std::cout << "Something went wrong: N must be a power of 2." << std::endl;
@@ -117,8 +125,10 @@ int main(int argc, char const *argv[])
         {
             if (finalParts[p].move_)
             {
+                space.push_back(finalParts[p].position_[0]);
+                space.push_back(finalParts[p].position_[1]);
                 phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
-                space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
+                // space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
                 velocities << finalParts[p].velocity_[0] << " " << finalParts[p].velocity_[1] << " " << finalParts[p].velocity_[2] << "\n";
                 KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);
             }          

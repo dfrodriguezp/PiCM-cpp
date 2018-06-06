@@ -10,6 +10,7 @@
 #include <random>
 #include "particle.cc"
 #include "parameters.h"
+#include "/usr/include/hdf5/serial/hdf5.h"
 
 typedef std::complex<double> Complex;
 typedef std::valarray<Complex> CArray;
