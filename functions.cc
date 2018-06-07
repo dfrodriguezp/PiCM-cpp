@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "cosa.h"
 
 typedef std::vector<std::valarray<double>> VecVal;
 typedef std::vector<std::vector<std::valarray<double>>> VecVecVal;
@@ -385,7 +385,7 @@ void Boris(const VecVal& E, const std::valarray<double>& extE, const std::valarr
     }
 }
 
-void rewind(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& particles)
+void outPhase(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& particles)
 {
     int index = 0;
     const double dt = direction * 0.5 * parameters::dt;
@@ -412,3 +412,91 @@ void rewind(const double& direction, const VecVal& E, const std::valarray<double
         index++;
     }
 }
+
+
+/**********************************************************************************************************/
+
+/*                                       DATA WRITING FUNTIONS                                            */
+
+/**********************************************************************************************************/
+
+void writeSpace(std::string filename, VecVal& dataX, VecVal& dataY)
+{   
+    const int steps = parameters::steps;
+    hid_t   file_id, dataset_id_x, dataset_id_y, dataspace_id;
+    hsize_t dims[2];
+    size_t  RANK = 2;
+    double  sdataX[dataX.size()][steps];
+    double  sdataY[dataY.size()][steps];
+
+    file_id = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    dims[0] = dataX.size();
+    dims[1] = steps;
+
+    dataspace_id = H5Screate_simple(RANK, dims, NULL);
+    dataset_id_x = H5Dcreate2(file_id, "spaceX", H5T_IEEE_F64BE, dataspace_id,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);    
+
+    dataset_id_y = H5Dcreate2(file_id, "spaceY", H5T_IEEE_F64BE, dataspace_id,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    std::cout << "me cago en dios hijueputa" << std::endl;
+    for (size_t i = 0; i < dataX.size(); i++)
+    {
+        for (size_t j = 0; j < steps; j++)
+        {
+            // sdata[i][j] = i * dataX.size() + j;
+            sdataX[i][j] = dataX[i][j];
+            sdataY[i][j] = dataY[i][j];
+        }
+    }
+
+    // std::cout << data.size() << " " << data[0].size() << std::endl;
+    // std::vector<std::vector<double>> vidaGonorrea(data.size());
+    
+    // for (int i = 0; i < data.size(); ++i)
+    // {
+    //     vidaGonorrea.at(i) = std::vector<double>(data[0].size());
+    //     for (int j = 0; j < data[0].size(); ++j)
+    //     {
+    //         vidaGonorrea.at(i).at(j) = i;
+    //     }
+    // }
+
+    H5Dwrite(dataset_id_x, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, sdataX);
+    H5Dwrite(dataset_id_y, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, sdataY);
+    H5Dclose(dataset_id_x);
+    H5Dclose(dataset_id_y);
+    H5Sclose(dataspace_id);
+    H5Fclose(file_id);
+}
+
+// void writeMesh(std::string filename, const int gp, const int dr)
+// {
+//     hid_t   file_id, dataset_id, dataspace_id;
+//     hsize_t dims[2];
+//     herr_t  status;
+//     int     RANK = 2;
+//     int     data[gp*gp][2];
+
+//     file_id = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+//     dims[0] = gp;
+//     dims[1] = gp;
+
+//     dataspace_id = H5Screate_simple(RANK, dims, NULL);
+//     dataset_id = H5Dcreate2(file_id, "mesh", H5T_STD_I32BE, dataspace_id,
+//                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+//     for (int i = 0; i < gp*gp; i++)
+//     {
+//         for (int j = 0; j < 2; j++)
+//             data[i][j] = 
+//     }
+
+//     status = H5Dwrite(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+//     status = H5Dclose(dataset_id);
+//     status = H5Sclose(dataspace_id);
+//     status = H5Fclose(file_id);
+// }

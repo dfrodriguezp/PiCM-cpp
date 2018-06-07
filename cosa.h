@@ -8,6 +8,8 @@
 #include <vector>
 #include <complex>
 #include <random>
+#include <string>
+#include "/usr/include/hdf5/serial/hdf5.h"
 #include "particle.cc"
 #include "parameters.h"
 
@@ -29,6 +31,8 @@ double norm(const std::valarray<double>& Array);
 inline std::valarray<double> cross(const std::valarray<double>& A, const std::valarray<double>& B);
 inline double mod(const double& a, const double& b);
 void Boris(const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& parts);
-void rewind(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& parts);
+void outPhase(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& parts);
+
+void writeSpace(std::string filename, VecVal& dataX, VecVal& dataY);
 
 #endif

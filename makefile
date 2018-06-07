@@ -1,20 +1,24 @@
 CC = g++
-CFLAGS = -std=c++11 -O3
+CFLAGS = -std=c++11 -O3 -Wall
 
-binaries = main.o particle.o functions.o
+binaries = main.o particle.o functions.o FFT.o
 
 
 main: $(binaries)
-	$(CC) $(CFLAGS) $(binaries) -o main
+	$(CC) $(CFLAGS) $(binaries) -o main -lhdf5_serial
 
-main.o: cpp-version/main.cc
-	$(CC) $(CFLAGS) -c cpp-version/main.cc -o main.o
+main.o: main.cc
+	$(CC) $(CFLAGS) -c main.cc -o main.o
 
-particle.o: cpp-version/particle.cc
-	$(CC) $(CFLAGS) -c cpp-version/particle.cc -o particle.o
+particle.o: particle.cc
+	$(CC) $(CFLAGS) -c particle.cc -o particle.o
 
-functions.o: cpp-version/functions.cc
-	$(CC) $(CFLAGS) -c cpp-version/functions.cc -o functions.o
+functions.o: functions.cc
+	$(CC) $(CFLAGS) -c functions.cc -o functions.o
+
+FFT.o: FFT.cc
+	$(CC) $(CFLAGS) -c FFT.cc -o FFT.o
+
 
 
 .PHONY: clean

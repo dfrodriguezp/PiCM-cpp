@@ -1,5 +1,6 @@
 # data
 *.dat
+*.h5
 
 # binaries
 *.o
