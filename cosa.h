@@ -33,6 +33,6 @@ inline double mod(const double& a, const double& b);
 void Boris(const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& parts);
 void outPhase(const double& direction, const VecVal& E, const std::valarray<double>& extE, const std::valarray<double>& B, std::vector<Particle>& parts);
 
-void writeSpace(std::string filename, VecVal& dataX, VecVal& dataY);
+void writeSpaceOrVelocities(std::string filename, std::string sname, VecVal& dataX, VecVal& dataY, VecVal& dataZ);
 
 #endif

@@ -45,6 +45,9 @@ int main(int argc, char const *argv[])
     // Data output
     VecVal spaceX = valarraysVector(N, steps);
     VecVal spaceY = valarraysVector(N, steps);
+    VecVal velocityX = valarraysVector(N, steps);
+    VecVal velocityY = valarraysVector(N, steps);
+    VecVal velocityZ = valarraysVector(N, steps);
     // std::vector<double> spaceX;
     // std::vector<double> spaceY;
 
@@ -125,6 +128,9 @@ int main(int argc, char const *argv[])
             {
                 spaceX.at(p)[step] = finalParts.at(p).position_[0];
                 spaceY.at(p)[step] = finalParts.at(p).position_[1];
+                velocityX.at(p)[step] = finalParts.at(p).velocity_[0];
+                velocityY.at(p)[step] = finalParts.at(p).velocity_[1];
+                velocityZ.at(p)[step] = finalParts.at(p).velocity_[2];
                 // std::cout << "puta mierda" << std::endl;
                 // phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
                 // space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
@@ -169,6 +175,9 @@ int main(int argc, char const *argv[])
     
     // energy.close();  
     std::cout << "Simulation finished." << std::endl; 
-    writeSpace(parameters::dataOutput, spaceX, spaceY);
+    hid_t file_id;
+    file_id = H5Fcreate(parameters::dataOutput.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    writeSpaceOrVelocities(parameters::dataOutput, "space", spaceX, spaceY, spaceX);
+    writeSpaceOrVelocities(parameters::dataOutput, "velocities", velocityX, velocityY, velocityZ);
     return 0;
 }
