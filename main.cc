@@ -28,6 +28,10 @@ int main(int argc, char const *argv[])
     std::valarray<double> B = {Bx, By, Bz};
     std::valarray<double> E;
 
+    // Data output
+
+    std::vector<std::vector<double>> space;
+
     // if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
     // {
     //     std::cout << "Something went wrong: N must be a power of 2." << std::endl;
