@@ -25,6 +25,7 @@ namespace parameters
     constexpr double dr(1.0);
     const std::string system = "two stream"; // Either "two stream", "random", etc.
     const std::string dataOutput = "prueba.h5";
+
 }
 
 namespace constants

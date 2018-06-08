@@ -19,8 +19,6 @@ functions.o: functions.cc
 FFT.o: FFT.cc
 	$(CC) $(CFLAGS) -c FFT.cc -o FFT.o
 
-
-
 .PHONY: clean
 clean:
 	rm -rf main *.o

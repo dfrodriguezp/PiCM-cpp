@@ -71,6 +71,7 @@ int main(int argc, char const *argv[])
     }
 
     for (Index p = 0; p < N; ++p)
+
     {
         rho_c.push_back(parts[p].q_ / (dr * dr));
     }
@@ -81,6 +82,7 @@ int main(int argc, char const *argv[])
     std::clock_t t_0 = std::clock();
     Real simulationTime;
     Real diff;
+
     
     for (Index step = 0; step < steps; ++step)
     {
@@ -120,6 +122,7 @@ int main(int argc, char const *argv[])
             velocityY.at(p)[step] = finalParts.at(p).velocity_[1];
             velocityZ.at(p)[step] = finalParts.at(p).velocity_[2];
             KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);    
+
         }
 
         KE *= 0.5;
@@ -138,7 +141,7 @@ int main(int argc, char const *argv[])
         }
 
         FE *= 0.5;
-
+      
         energy.push_back({KE, FE});
         
         if (step == 0)
