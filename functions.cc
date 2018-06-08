@@ -435,7 +435,7 @@ void writeData(std::string filename, std::string sname, const VecVal& data)
     dims[1] = data.at(0).size();
 
     dataspace_id = H5Screate_simple(RANK, dims, NULL);
-    dataset_id = H5Dcreate2(file_id, sname.c_str(), H5T_IEEE_F64BE, dataspace_id,
+    dataset_id = H5Dcreate2(file_id, sname.c_str(), H5T_IEEE_F64LE, dataspace_id,
                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
     for (Index i = 0; i < data.size(); i++)

@@ -59,25 +59,21 @@ int main(int argc, char const *argv[])
     VecVal phi = valarraysVector(gridPoints*gridPoints, steps);
     VecVal fieldX = valarraysVector(gridPoints*gridPoints, steps);
     VecVal fieldY = valarraysVector(gridPoints*gridPoints, steps);
+    VecVal energy;
 
     std::vector<Real> rho_c;
+
+    // Write mesh (only once)
+    for (Index i = 0; i < gridPoints; ++i)
+    {
+        for (Index j = 0; j < gridPoints; ++j)
+            mesh.push_back({i * dr, j * dr});
+    }
 
     for (Index p = 0; p < N; ++p)
     {
         rho_c.push_back(parts[p].q_ / (dr * dr));
     }
-
-    // std::string mainFolder = parameters::folder;
-
-    // This doesn't work on a Linux OS.
-    // std::string directory = "~/Desktop/" + mainFolder;
-    // std::string dataOutput = name;
-    // std::vector<std::string> folders = {"/space", "/phaseSpace", "/velocities", "/rho", "/phi", "/Efield", "/energy"};
-    
-    // for (Index f = 0; f < folders.size(); ++f)
-    // {
-    //     system(("mkdir -p " + directory + folders[f]).c_str());
-    // }
 
     std::vector<Particle> finalParts;
 
@@ -85,8 +81,6 @@ int main(int argc, char const *argv[])
     std::clock_t t_0 = std::clock();
     Real simulationTime;
     Real diff;
-    // std::ofstream energy;
-    // energy.open(directory + "/energy/energy.dat");
     
     for (Index step = 0; step < steps; ++step)
     {
@@ -114,20 +108,6 @@ int main(int argc, char const *argv[])
         finalParts = parts;
         outPhase(1.0, EFIELDp, E, B, finalParts);
 
-        // std::ofstream phaseSpace;
-        // std::ofstream space;
-        // std::ofstream velocities;
-        // std::ofstream electricField;
-        // std::ofstream electricPotential;
-        // std::ofstream chargeDensity;
-
-        // phaseSpace.open(directory + "/phaseSpace/step" + std::to_string(step) + ".dat");
-        // space.open(directory + "/space/step" + std::to_string(step) + ".dat");
-        // velocities.open(directory + "/velocities/step" + std::to_string(step) + ".dat");
-        // electricField.open(directory + "/Efield/step" + std::to_string(step) + ".dat");
-        // electricPotential.open(directory + "/phi/step" + std::to_string(step) + ".dat");
-        // chargeDensity.open(directory + "/rho/step" + std::to_string(step) + ".dat");
-
         Real KE = 0.0;
         Real FE = 0.0;
 
@@ -139,11 +119,7 @@ int main(int argc, char const *argv[])
             velocityX.at(p)[step] = finalParts.at(p).velocity_[0];
             velocityY.at(p)[step] = finalParts.at(p).velocity_[1];
             velocityZ.at(p)[step] = finalParts.at(p).velocity_[2];
-            // std::cout << "puta mierda" << std::endl;
-            // phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
-            // space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
-            // velocities << finalParts[p].velocity_[0] << " " << finalParts[p].velocity_[1] << " " << finalParts[p].velocity_[2] << "\n";
-            // KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);    
+            KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);    
         }
 
         KE *= 0.5;
@@ -153,28 +129,17 @@ int main(int argc, char const *argv[])
             for (Index j = 0; j < gridPoints; ++j)
             {
                 Index index = i * gridPoints + j;
-                mesh.push_back({i * dr, j * dr});
                 rho.at(index)[step] = RHO[i][j];
                 phi.at(index)[step] = PHI[i][j];
                 fieldX.at(index)[step] = EFIELDn[i][j][0];
                 fieldY.at(index)[step] = EFIELDn[i][j][1];
-                // electricField << i * dr << " " << j * dr << " " << EFIELDn[i][j][0] << " " << EFIELDn[i][j][1] << "\n";
-                // electricPotential << i * dr << " " << j * dr << " " << PHI[i][j] << "\n";
-                // chargeDensity << i * dr << " " << j * dr << " " << RHO[i][j] << "\n";
-                // FE += RHO[i][j] * PHI[i][j];
+                FE += RHO[i][j] * PHI[i][j];
             }
         }
 
         FE *= 0.5;
 
-        // energy << step << " " << KE << " " << FE << "\n";
-        
-        // phaseSpace.close();
-        // space.close();
-        // velocities.close();
-        // electricField.close();
-        // electricPotential.close();
-        // chargeDensity.close();
+        energy.push_back({KE, FE});
         
         if (step == 0)
         {
@@ -186,11 +151,8 @@ int main(int argc, char const *argv[])
         std::cout << "Aproximate time remaining: " << simulationTime * (steps - step) << " seconds." << std::endl;
     }
     
-    // energy.close();  
     std::cout << "Simulation finished." << std::endl; 
-
     std::cout << "\n************************************************\n" << std::endl;
-
     std::cout << "Writing data..." << std::endl;
 
     hid_t file_id;
@@ -209,8 +171,10 @@ int main(int argc, char const *argv[])
     writeData(parameters::dataOutput, "phi", phi);
     writeData(parameters::dataOutput, "fieldX", fieldX);
     writeData(parameters::dataOutput, "fieldY", fieldY);
-
+    writeData(parameters::dataOutput, "energy", energy);
 
     std::cout << "Done!" << std::endl;
+    std::cout << "\n************************************************\n" << std::endl;
+
     return 0;
 }
