@@ -99,16 +99,16 @@ int main(int argc, char const *argv[])
         std::ofstream space;
         std::ofstream velocities;
         // std::ofstream phaseSpace;
-        // std::ofstream electricField;
-        // std::ofstream electricPotential;
-        // std::ofstream chargeDensity;
+        std::ofstream electricField;
+        std::ofstream electricPotential;
+        std::ofstream chargeDensity;
 
         space.open(directory + "/space/step" + std::to_string(step) + ".dat");
         velocities.open(directory + "/velocities/step" + std::to_string(step) + ".dat");
         // phaseSpace.open(directory + "/phaseSpace/step" + std::to_string(step) + ".dat");
-        // electricField.open(directory + "/Efield/step" + std::to_string(step) + ".dat");
-        // electricPotential.open(directory + "/phi/step" + std::to_string(step) + ".dat");
-        // chargeDensity.open(directory + "/rho/step" + std::to_string(step) + ".dat");
+        electricField.open(directory + "/Efield/step" + std::to_string(step) + ".dat");
+        electricPotential.open(directory + "/phi/step" + std::to_string(step) + ".dat");
+        chargeDensity.open(directory + "/rho/step" + std::to_string(step) + ".dat");
 
         double KE = 0.0;
         double FE = 0.0;
@@ -126,16 +126,16 @@ int main(int argc, char const *argv[])
 
         KE *= 0.5;
 
-        // for (int i = 0; i < gridPoints; ++i)
-        // {
-        //     for (int j = 0; j < gridPoints; ++j)
-        //     {
-        //         electricField << i * dr << " " << j * dr << " " << EFIELDn[i][j][0] << " " << EFIELDn[i][j][1] << "\n";
-        //         electricPotential << i * dr << " " << j * dr << " " << PHI[i][j] << "\n";
-        //         chargeDensity << i * dr << " " << j * dr << " " << RHO[i][j] << "\n";
-        //         FE += RHO[i][j] * PHI[i][j];
-        //     }
-        // }
+        for (int i = 0; i < gridPoints; ++i)
+        {
+            for (int j = 0; j < gridPoints; ++j)
+            {
+                electricField << i * dr << " " << j * dr << " " << EFIELDn[i][j][0] << " " << EFIELDn[i][j][1] << "\n";
+                electricPotential << i * dr << " " << j * dr << " " << PHI[i][j] << "\n";
+                chargeDensity << i * dr << " " << j * dr << " " << RHO[i][j] << "\n";
+                // FE += RHO[i][j] * PHI[i][j];
+            }
+        }
 
         FE *= 0.5;
 
@@ -144,9 +144,9 @@ int main(int argc, char const *argv[])
         space.close();
         velocities.close();
         // phaseSpace.close();
-        // electricField.close();
-        // electricPotential.close();
-        // chargeDensity.close();
+        electricField.close();
+        electricPotential.close();
+        chargeDensity.close();
         
         if (step == 0)
         {
