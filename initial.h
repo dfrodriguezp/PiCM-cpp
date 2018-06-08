@@ -35,8 +35,6 @@ inline Real mod(const Real& a, const Real& b);
 void Boris(const VecVal& E, const std::valarray<Real>& extE, const std::valarray<Real>& B, std::vector<Particle>& parts);
 void outPhase(const Real& direction, const VecVal& E, const std::valarray<Real>& extE, const std::valarray<Real>& B, std::vector<Particle>& parts);
 
-void writeSpaceOrVelocities(std::string filename, std::string sname, VecVal& dataX, VecVal& dataY, VecVal& dataZ);
-void writeMesh(std::string filename, const VecVal& data);
 void writeData(std::string filename, std::string sname, const VecVal& data);
 
 #endif
