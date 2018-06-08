@@ -53,7 +53,7 @@ int main(int argc, char const *argv[])
     std::string mainFolder = parameters::folder;
 
     // This works on a Linux OS.
-    std::string directory = "~/Desktop/" + mainFolder;
+    std::string directory = mainFolder;
     std::vector<std::string> folders = {"/space", "/phaseSpace", "/velocities", "/rho", "/phi", "/Efield", "/energy"};
     
     for (int f = 0; f < folders.size(); ++f)
@@ -67,8 +67,8 @@ int main(int argc, char const *argv[])
     std::clock_t t_0 = std::clock();
     double simulationTime;
     double diff;
-    std::ofstream energy;
-    energy.open(directory + "/energy/energy.dat");
+    // std::ofstream energy;
+    // energy.open(directory + "/energy/energy.dat");
     
     for (int step = 0; step < steps; ++step)
     {
@@ -96,19 +96,19 @@ int main(int argc, char const *argv[])
         finalParts = parts;
         rewind(1.0, EFIELDp, E, B, finalParts);
 
-        std::ofstream phaseSpace;
         std::ofstream space;
         std::ofstream velocities;
-        std::ofstream electricField;
-        std::ofstream electricPotential;
-        std::ofstream chargeDensity;
+        // std::ofstream phaseSpace;
+        // std::ofstream electricField;
+        // std::ofstream electricPotential;
+        // std::ofstream chargeDensity;
 
-        phaseSpace.open(directory + "/phaseSpace/step" + std::to_string(step) + ".dat");
         space.open(directory + "/space/step" + std::to_string(step) + ".dat");
         velocities.open(directory + "/velocities/step" + std::to_string(step) + ".dat");
-        electricField.open(directory + "/Efield/step" + std::to_string(step) + ".dat");
-        electricPotential.open(directory + "/phi/step" + std::to_string(step) + ".dat");
-        chargeDensity.open(directory + "/rho/step" + std::to_string(step) + ".dat");
+        // phaseSpace.open(directory + "/phaseSpace/step" + std::to_string(step) + ".dat");
+        // electricField.open(directory + "/Efield/step" + std::to_string(step) + ".dat");
+        // electricPotential.open(directory + "/phi/step" + std::to_string(step) + ".dat");
+        // chargeDensity.open(directory + "/rho/step" + std::to_string(step) + ".dat");
 
         double KE = 0.0;
         double FE = 0.0;
@@ -117,36 +117,36 @@ int main(int argc, char const *argv[])
         {
             if (finalParts[p].move_)
             {
-                phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
+                // phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
                 space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
                 velocities << finalParts[p].velocity_[0] << " " << finalParts[p].velocity_[1] << " " << finalParts[p].velocity_[2] << "\n";
-                KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);
+                // KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);
             }          
         }
 
         KE *= 0.5;
 
-        for (int i = 0; i < gridPoints; ++i)
-        {
-            for (int j = 0; j < gridPoints; ++j)
-            {
-                electricField << i * dr << " " << j * dr << " " << EFIELDn[i][j][0] << " " << EFIELDn[i][j][1] << "\n";
-                electricPotential << i * dr << " " << j * dr << " " << PHI[i][j] << "\n";
-                chargeDensity << i * dr << " " << j * dr << " " << RHO[i][j] << "\n";
-                FE += RHO[i][j] * PHI[i][j];
-            }
-        }
+        // for (int i = 0; i < gridPoints; ++i)
+        // {
+        //     for (int j = 0; j < gridPoints; ++j)
+        //     {
+        //         electricField << i * dr << " " << j * dr << " " << EFIELDn[i][j][0] << " " << EFIELDn[i][j][1] << "\n";
+        //         electricPotential << i * dr << " " << j * dr << " " << PHI[i][j] << "\n";
+        //         chargeDensity << i * dr << " " << j * dr << " " << RHO[i][j] << "\n";
+        //         FE += RHO[i][j] * PHI[i][j];
+        //     }
+        // }
 
         FE *= 0.5;
 
-        energy << step << " " << KE << " " << FE << "\n";
+        // energy << step << " " << KE << " " << FE << "\n";
         
-        phaseSpace.close();
         space.close();
         velocities.close();
-        electricField.close();
-        electricPotential.close();
-        chargeDensity.close();
+        // phaseSpace.close();
+        // electricField.close();
+        // electricPotential.close();
+        // chargeDensity.close();
         
         if (step == 0)
         {
@@ -158,7 +158,7 @@ int main(int argc, char const *argv[])
         std::cout << "Aproximate time remaining: " << simulationTime * (steps - step) << " seconds." << std::endl;
     }
     
-    energy.close();  
+    // energy.close();  
 
     std::cout << "Simulation finished." << std::endl; 
     return 0;
