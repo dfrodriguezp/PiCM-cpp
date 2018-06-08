@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "initial.h"
 #include <fstream>
 #include <string>
 #include <cstdlib>
@@ -9,30 +9,23 @@ int main(int argc, char const *argv[])
 {
     srand(parameters::seed);
     std::vector<Particle> parts;
-    const int N = parameters::N;
-    const int gridPoints = parameters::gp;
-    const double dr = parameters::dr;
-    const int steps = parameters::steps;
-    const double dt = parameters::dt;
+    const Index N = parameters::N;
+    const Index gridPoints = parameters::gp;
+    const Real dr = parameters::dr;
+    const Index steps = parameters::steps;
 
     // External magnetic field
-    const double Bx = parameters::Bx;
-    const double By = parameters::By;
-    const double Bz = parameters::Bz;
+    const Real Bx = parameters::Bx;
+    const Real By = parameters::By;
+    const Real Bz = parameters::Bz;
 
     // External electric field
-    const double Ex = parameters::Ex;
-    const double Ey = parameters::Ey;
-    const double Ez = parameters::Ez;
+    const Real Ex = parameters::Ex;
+    const Real Ey = parameters::Ey;
+    const Real Ez = parameters::Ez;
 
-    std::valarray<double> B = {Bx, By, Bz};
-    std::valarray<double> E;
-
-    // if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
-    // {
-    //     std::cout << "Something went wrong: N must be a power of 2." << std::endl;
-    //     return 1;
-    // }
+    std::valarray<Real> B = {Bx, By, Bz};
+    std::valarray<Real> E;
 
     if (parameters::system == "two stream")
     {
@@ -43,41 +36,62 @@ int main(int argc, char const *argv[])
         parts = random_particles();    
     }
 
-    std::vector<double> rho_c;
-
-    for (int p = 0; p < N; ++p)
+    std::vector<Index> mobileParticles;
+    for (Index p = 0; p < N; p++)
     {
-        rho_c.push_back(parts[p].q_ / (dr * dr));
+        if (parts.at(p).move_)
+        {
+            mobileParticles.push_back(p);
+        }
     }
 
-    std::string mainFolder = parameters::folder;
+    const Index Nm = mobileParticles.size();
 
-    // This works on a Linux OS.
-    std::string directory = mainFolder;
-    std::vector<std::string> folders = {"/space", "/phaseSpace", "/velocities", "/rho", "/phi", "/Efield", "/energy"};
-    
-    for (int f = 0; f < folders.size(); ++f)
+    // Data output
+    VecVal spaceX = valarraysVector(Nm, steps);
+    VecVal spaceY = valarraysVector(Nm, steps);
+    VecVal spaceZ = valarraysVector(Nm, steps);
+    VecVal velocityX = valarraysVector(Nm, steps);
+    VecVal velocityY = valarraysVector(Nm, steps);
+    VecVal velocityZ = valarraysVector(Nm, steps);
+    VecVal mesh;
+    VecVal rho = valarraysVector(gridPoints*gridPoints, steps);
+    VecVal phi = valarraysVector(gridPoints*gridPoints, steps);
+    VecVal fieldX = valarraysVector(gridPoints*gridPoints, steps);
+    VecVal fieldY = valarraysVector(gridPoints*gridPoints, steps);
+    VecVal energy;
+
+    std::vector<Real> rho_c;
+
+    // Write mesh (only once)
+    for (Index i = 0; i < gridPoints; ++i)
     {
-        system(("mkdir -p " + directory + folders[f]).c_str());
+        for (Index j = 0; j < gridPoints; ++j)
+            mesh.push_back({i * dr, j * dr});
+    }
+
+    for (Index p = 0; p < N; ++p)
+
+    {
+        rho_c.push_back(parts[p].q_ / (dr * dr));
     }
 
     std::vector<Particle> finalParts;
 
     std::cout << "Simulation running..." << std::endl;
     std::clock_t t_0 = std::clock();
-    double simulationTime;
-    double diff;
-    // std::ofstream energy;
-    // energy.open(directory + "/energy/energy.dat");
+    Real simulationTime;
+    Real diff;
+
     
-    for (int step = 0; step < steps; ++step)
+    for (Index step = 0; step < steps; ++step)
     {
         VecVal RHO = density(parts, rho_c, dr);
         VecVal PHI = potential(RHO, dr);
         VecVecVal EFIELDn = EField_GP(PHI, dr);
         VecVal EFIELDp = EField_P(EFIELDn, parts, dr);
 
-        if (step < int(0.2 * steps)) 
+        if (step < Index(0.2 * steps)) 
         {
             E = {Ex, Ey, Ez};
         }
@@ -89,77 +103,81 @@ int main(int argc, char const *argv[])
 
         if (step == 0)
         {
-            rewind(-1.0, EFIELDp, E, B, parts);
+            outPhase(-1.0, EFIELDp, E, B, parts);
         }
 
         Boris(EFIELDp, E, B, parts);
         finalParts = parts;
-        rewind(1.0, EFIELDp, E, B, finalParts);
+        outPhase(1.0, EFIELDp, E, B, finalParts);
 
-        std::ofstream space;
-        std::ofstream velocities;
-        // std::ofstream phaseSpace;
-        std::ofstream electricField;
-        std::ofstream electricPotential;
-        std::ofstream chargeDensity;
+        Real KE = 0.0;
+        Real FE = 0.0;
 
-        space.open(directory + "/space/step" + std::to_string(step) + ".dat");
-        velocities.open(directory + "/velocities/step" + std::to_string(step) + ".dat");
-        // phaseSpace.open(directory + "/phaseSpace/step" + std::to_string(step) + ".dat");
-        electricField.open(directory + "/Efield/step" + std::to_string(step) + ".dat");
-        electricPotential.open(directory + "/phi/step" + std::to_string(step) + ".dat");
-        chargeDensity.open(directory + "/rho/step" + std::to_string(step) + ".dat");
-
-        double KE = 0.0;
-        double FE = 0.0;
-
-        for (int p = 0; p < N; ++p)
+        for (size_t p = 0; p < Nm; ++p)
         {
-            if (finalParts[p].move_)
-            {
-                // phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
-                space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
-                velocities << finalParts[p].velocity_[0] << " " << finalParts[p].velocity_[1] << " " << finalParts[p].velocity_[2] << "\n";
-                // KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);
-            }          
+            spaceX.at(p)[step] = finalParts.at(p).position_[0];
+            spaceY.at(p)[step] = finalParts.at(p).position_[1];
+            spaceZ.at(p)[step] = finalParts.at(p).position_[2];
+            velocityX.at(p)[step] = finalParts.at(p).velocity_[0];
+            velocityY.at(p)[step] = finalParts.at(p).velocity_[1];
+            velocityZ.at(p)[step] = finalParts.at(p).velocity_[2];
+            KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);    
+
         }
 
         KE *= 0.5;
 
-        for (int i = 0; i < gridPoints; ++i)
+        for (Index i = 0; i < gridPoints; ++i)
         {
-            for (int j = 0; j < gridPoints; ++j)
+            for (Index j = 0; j < gridPoints; ++j)
             {
-                electricField << i * dr << " " << j * dr << " " << EFIELDn[i][j][0] << " " << EFIELDn[i][j][1] << "\n";
-                electricPotential << i * dr << " " << j * dr << " " << PHI[i][j] << "\n";
-                chargeDensity << i * dr << " " << j * dr << " " << RHO[i][j] << "\n";
-                // FE += RHO[i][j] * PHI[i][j];
+                Index index = i * gridPoints + j;
+                rho.at(index)[step] = RHO[i][j];
+                phi.at(index)[step] = PHI[i][j];
+                fieldX.at(index)[step] = EFIELDn[i][j][0];
+                fieldY.at(index)[step] = EFIELDn[i][j][1];
+                FE += RHO[i][j] * PHI[i][j];
             }
         }
 
         FE *= 0.5;
-
-        // energy << step << " " << KE << " " << FE << "\n";
-        
-        space.close();
-        velocities.close();
-        // phaseSpace.close();
-        electricField.close();
-        electricPotential.close();
-        chargeDensity.close();
+      
+        energy.push_back({KE, FE});
         
         if (step == 0)
         {
             std::clock_t t_1 = std::clock();
-            diff = double(t_1 - t_0);
+            diff = Real(t_1 - t_0);
             simulationTime = (diff / CLOCKS_PER_SEC);
         }
 
         std::cout << "Aproximate time remaining: " << simulationTime * (steps - step) << " seconds." << std::endl;
     }
     
-    // energy.close();  
-
     std::cout << "Simulation finished." << std::endl; 
+    std::cout << "\n************************************************\n" << std::endl;
+    std::cout << "Writing data..." << std::endl;
+
+    hid_t file_id;
+    file_id = H5Fcreate(parameters::dataOutput.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    writeData(parameters::dataOutput, "space_x", spaceX);
+    writeData(parameters::dataOutput, "space_y", spaceY);
+    writeData(parameters::dataOutput, "space_z", spaceZ);
+
+    writeData(parameters::dataOutput, "velocity_x", velocityX);
+    writeData(parameters::dataOutput, "velocity_y", velocityY);
+    writeData(parameters::dataOutput, "velocity_z", velocityZ);
+
+    writeData(parameters::dataOutput, "mesh", mesh);
+    writeData(parameters::dataOutput, "rho", rho);
+    writeData(parameters::dataOutput, "phi", phi);
+    writeData(parameters::dataOutput, "fieldX", fieldX);
+    writeData(parameters::dataOutput, "fieldY", fieldY);
+    writeData(parameters::dataOutput, "energy", energy);
+
+    std::cout << "Done!" << std::endl;
+    std::cout << "\n************************************************\n" << std::endl;
+
     return 0;
 }

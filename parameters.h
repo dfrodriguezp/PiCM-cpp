@@ -24,11 +24,13 @@ namespace parameters
     constexpr double vd(5.0);
     constexpr double dr(1.0);
     const std::string system = "two stream"; // Either "two stream", "random", etc.
-    const std::string folder = "prueba";
+    const std::string dataOutput = "prueba.h5";
+
 }
 
 namespace constants
 {
     constexpr double pi(3.141592653589793);
 }
+
 #endif

@@ -5,7 +5,7 @@ binaries = main.o particle.o functions.o FFT.o
 
 
 main: $(binaries)
-	$(CC) $(CFLAGS) $(binaries) -o main
+	$(CC) $(CFLAGS) $(binaries) -o main -lhdf5_serial
 
 main.o: main.cc
 	$(CC) $(CFLAGS) -c main.cc -o main.o
@@ -18,7 +18,6 @@ functions.o: functions.cc
 
 FFT.o: FFT.cc
 	$(CC) $(CFLAGS) -c FFT.cc -o FFT.o
-
 
 .PHONY: clean
 clean:
