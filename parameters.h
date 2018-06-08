@@ -7,8 +7,8 @@ namespace parameters
 {
     // External magnetic field
     constexpr double Bx(0.0);
-    constexpr double By(0.0);
-    constexpr double Bz(0.1);
+    constexpr double By(0.1);
+    constexpr double Bz(0.0);
 
     // External electric field
     constexpr double Ex(0.0);
@@ -31,4 +31,5 @@ namespace constants
 {
     constexpr double pi(3.141592653589793);
 }
+
 #endif
