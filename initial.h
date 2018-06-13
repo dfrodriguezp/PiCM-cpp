@@ -19,6 +19,7 @@ typedef std::vector<std::valarray<Real>> VecVal;
 typedef std::vector<std::vector<std::valarray<Real>>> VecVecVal;
 typedef std::complex<Real> Complex;
 typedef std::valarray<Complex> CArray;
+typedef std::vector<std::vector<Real>> VecVec;
 
 std::vector<Particle> two_stream();
 std::vector<Particle> random_particles();
@@ -35,6 +36,7 @@ inline Real mod(const Real& a, const Real& b);
 void Boris(const VecVal& E, const std::valarray<Real>& extE, const std::valarray<Real>& B, std::vector<Particle>& parts);
 void outPhase(const Real& direction, const VecVal& E, const std::valarray<Real>& extE, const std::valarray<Real>& B, std::vector<Particle>& parts);
 
-void writeData(std::string filename, std::string sname, const VecVal& data);
+void createOutput(std::string filename, std::string sname, Index NX, Index NY);
+void writeData(std::string filename, std::string sname, const std::vector<Real>& data, Index col);
 
 #endif

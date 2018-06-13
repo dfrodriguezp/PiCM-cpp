@@ -16,9 +16,9 @@ namespace parameters
     constexpr double Ez(0.0);
 
     constexpr int gp(64);
-    constexpr int N(10 * 10);
+    constexpr int N(100 * 100);
     constexpr double dt(0.05);
-    constexpr int steps(100);
+    constexpr int steps(1000);
     constexpr int seed(1886615);
     constexpr double vt(1.0);
     constexpr double vd(5.0);

@@ -6,6 +6,7 @@ typedef std::vector<std::valarray<Real>> VecVal;
 typedef std::vector<std::vector<std::valarray<Real>>> VecVecVal;
 typedef std::complex<Real> Complex;
 typedef std::valarray<Complex> CArray;
+typedef std::vector<std::vector<Real>> VecVec;
 
 VecVal valarraysVector(const Index& rows, const Index& cols)
 {
@@ -417,34 +418,76 @@ void outPhase(const Real& direction, const VecVal& E, const std::valarray<Real>&
 
 /**********************************************************************************************************/
 
-/*                                       DATA WRITING FUNTION                                            */
+/*                                       DATA WRITING FUNTIONS                                            */
 
 /**********************************************************************************************************/
-
-
-void writeData(std::string filename, std::string sname, const VecVal& data)
+void createOutput(std::string filename, std::string sname, Index NX, Index NY)
 {
-    hid_t   file_id, dataset_id, dataspace_id;
-    hsize_t dims[2];
-    Index   RANK = 2;
-    Real    sdata[data.size()][data.at(0).size()];
+    hid_t   file_id, dataset_id, dataspace_id, dcpl_id;
+    hsize_t dims[2], chunk_dims[2];
+    Index   szip_options_mask, pixels_per_block;
 
     file_id = H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    dims[0] = NX;
+    dims[1] = NY;
+    dataspace_id = H5Screate_simple(2, dims, NULL);
 
-    dims[0] = data.size();
-    dims[1] = data.at(0).size();
+    dcpl_id = H5Pcreate(H5P_DATASET_CREATE);
 
-    dataspace_id = H5Screate_simple(RANK, dims, NULL);
-    dataset_id = H5Dcreate2(file_id, sname.c_str(), H5T_IEEE_F64LE, dataspace_id,
-                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    szip_options_mask = H5_SZIP_NN_OPTION_MASK;
+    pixels_per_block = 10;
+    H5Pset_szip(dcpl_id, szip_options_mask, pixels_per_block);  
 
-    for (Index i = 0; i < data.size(); i++)
-    {
-        for (Index j = 0; j < data.at(0).size(); j++)
-            sdata[i][j] = data[i][j];
+    if (sname == "mesh" || sname == "energy") {
+        chunk_dims[0] = Index(NX / 5);
+        chunk_dims[1] = 1;
+    } else {
+        chunk_dims[0] = 1;
+        chunk_dims[1] = Index(NY / 5);
     }
 
-    H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, sdata);
+    H5Pset_chunk(dcpl_id, 2, chunk_dims);
+    dataset_id = H5Dcreate2(file_id, sname.c_str(), H5T_IEEE_F64LE, dataspace_id,
+                            H5P_DEFAULT, dcpl_id, H5P_DEFAULT);
+
+    H5Dclose(dataset_id);
+    H5Sclose(dataspace_id);
+    H5Pclose(dcpl_id);
+    H5Fclose(file_id);
+}
+
+void writeData(std::string filename, std::string sname, const std::vector<Real>& data, Index col)
+{
+    hid_t   file_id, dataset_id, dataspace_id, memspace_id;
+    hsize_t dimsm[1];
+    hsize_t count[2];
+    hsize_t offset[2];
+    hsize_t stride[2];
+    hsize_t block[2];
+    Index NX = data.size();
+
+    file_id = H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    dataset_id = H5Dopen2(file_id, sname.c_str(), H5P_DEFAULT);
+
+    dataspace_id = H5Dget_space(dataset_id);
+    dimsm[0] = NX;
+    memspace_id = H5Screate_simple(1, dimsm, NULL);
+
+    offset[0] = 0;
+    offset[1] = col;
+
+    count[0] = NX;
+    count[1] = 1;
+
+    stride[0] = 1;
+    stride[1] = 1;
+
+    block[0] = 1;
+    block[1] = 1;
+
+    H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset, stride, count, block);
+    H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, memspace_id, dataspace_id, H5P_DEFAULT, data.data());
+
     H5Dclose(dataset_id);
     H5Sclose(dataspace_id);
     H5Fclose(file_id);
