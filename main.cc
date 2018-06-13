@@ -5,8 +5,7 @@
 #include <ctime>
 #include <iostream>
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
     srand(parameters::seed);
     std::vector<Particle> parts;
     const Index N = parameters::N;
@@ -27,20 +26,19 @@ int main(int argc, char const *argv[])
     std::valarray<Real> B = {Bx, By, Bz};
     std::valarray<Real> E;
 
-    if (parameters::system == "two stream")
-    {
+    if (parameters::system == "two stream"){
         parts = two_stream();
-    }
-    else if (parameters::system == "random")
-    {
+    } else if (parameters::system == "random") {
         parts = random_particles();    
     }
 
+    std::vector<Real> rho_c;
     std::vector<Index> mobileParticles;
-    for (Index p = 0; p < N; p++)
-    {
-        if (parts.at(p).move_)
-        {
+    
+    for (Index p = 0; p < N; p++) {
+        rho_c.push_back(parts[p].q_ / (dr * dr));
+
+        if (parts.at(p).move_) {
             mobileParticles.push_back(p);
         }
     }
@@ -48,32 +46,26 @@ int main(int argc, char const *argv[])
     const Index Nm = mobileParticles.size();
 
     // Data output
-    VecVal spaceX = valarraysVector(Nm, steps);
-    VecVal spaceY = valarraysVector(Nm, steps);
-    VecVal spaceZ = valarraysVector(Nm, steps);
-    VecVal velocityX = valarraysVector(Nm, steps);
-    VecVal velocityY = valarraysVector(Nm, steps);
-    VecVal velocityZ = valarraysVector(Nm, steps);
-    VecVal mesh;
-    VecVal rho = valarraysVector(gridPoints*gridPoints, steps);
-    VecVal phi = valarraysVector(gridPoints*gridPoints, steps);
-    VecVal fieldX = valarraysVector(gridPoints*gridPoints, steps);
-    VecVal fieldY = valarraysVector(gridPoints*gridPoints, steps);
-    VecVal energy;
-
-    std::vector<Real> rho_c;
+    VecVec spaceX(Nm);
+    VecVec spaceY(Nm);
+    VecVec spaceZ(Nm);
+    VecVec velocityX(Nm);
+    VecVec velocityY(Nm);
+    VecVec velocityZ(Nm);
+    VecVec mesh;
+    VecVec rho(gridPoints * gridPoints);
+    VecVec phi(gridPoints * gridPoints);
+    VecVec fieldX(gridPoints * gridPoints);
+    VecVec fieldY(gridPoints * gridPoints);
+    VecVec energy;
 
     // Write mesh (only once)
-    for (Index i = 0; i < gridPoints; ++i)
-    {
-        for (Index j = 0; j < gridPoints; ++j)
-            mesh.push_back({i * dr, j * dr});
-    }
-
-    for (Index p = 0; p < N; ++p)
-
-    {
-        rho_c.push_back(parts[p].q_ / (dr * dr));
+    for (Index i = 0; i < gridPoints; ++i) {
+        for (Index j = 0; j < gridPoints; ++j) {
+            std::vector<Real> point = {i* dr, j * dr};
+            mesh.push_back(point);
+            // mesh.push_back({i * dr, j * dr});
+        }
     }
 
     std::vector<Particle> finalParts;
@@ -84,25 +76,19 @@ int main(int argc, char const *argv[])
     Real diff;
 
     
-    for (Index step = 0; step < steps; ++step)
-    {
+    for (Index step = 0; step < steps; ++step) {
         VecVal RHO = density(parts, rho_c, dr);
         VecVal PHI = potential(RHO, dr);
         VecVecVal EFIELDn = EField_GP(PHI, dr);
         VecVal EFIELDp = EField_P(EFIELDn, parts, dr);
 
-        if (step < Index(0.2 * steps)) 
-        {
+        if (step < Index(0.2 * steps)) {
             E = {Ex, Ey, Ez};
-        }
-
-        else
-        {
+        } else {
             E = {0.0, 0.0, 0.0};
         }
 
-        if (step == 0)
-        {
+        if (step == 0) {
             outPhase(-1.0, EFIELDp, E, B, parts);
         }
 
@@ -113,39 +99,36 @@ int main(int argc, char const *argv[])
         Real KE = 0.0;
         Real FE = 0.0;
 
-        for (size_t p = 0; p < Nm; ++p)
-        {
-            spaceX.at(p)[step] = finalParts.at(p).position_[0];
-            spaceY.at(p)[step] = finalParts.at(p).position_[1];
-            spaceZ.at(p)[step] = finalParts.at(p).position_[2];
-            velocityX.at(p)[step] = finalParts.at(p).velocity_[0];
-            velocityY.at(p)[step] = finalParts.at(p).velocity_[1];
-            velocityZ.at(p)[step] = finalParts.at(p).velocity_[2];
+        for (size_t p = 0; p < Nm; ++p) {
+            spaceX.at(p).push_back(finalParts.at(p).position_[0]);
+            spaceY.at(p).push_back(finalParts.at(p).position_[1]);
+            spaceZ.at(p).push_back(finalParts.at(p).position_[1]);
+            velocityX.at(p).push_back(finalParts.at(p).velocity_[0]);
+            velocityY.at(p).push_back(finalParts.at(p).velocity_[1]);
+            velocityZ.at(p).push_back(finalParts.at(p).velocity_[2]);
             KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);    
-
         }
 
         KE *= 0.5;
 
-        for (Index i = 0; i < gridPoints; ++i)
-        {
-            for (Index j = 0; j < gridPoints; ++j)
-            {
+        for (Index i = 0; i < gridPoints; ++i) {
+            for (Index j = 0; j < gridPoints; ++j) {
                 Index index = i * gridPoints + j;
-                rho.at(index)[step] = RHO[i][j];
-                phi.at(index)[step] = PHI[i][j];
-                fieldX.at(index)[step] = EFIELDn[i][j][0];
-                fieldY.at(index)[step] = EFIELDn[i][j][1];
+                rho.at(index).push_back(RHO[i][j]);
+                phi.at(index).push_back(PHI[i][j]);
+                fieldX.at(index).push_back(EFIELDn[i][j][0]);
+                fieldY.at(index).push_back(EFIELDn[i][j][1]);
                 FE += RHO[i][j] * PHI[i][j];
             }
         }
 
         FE *= 0.5;
-      
-        energy.push_back({KE, FE});
         
-        if (step == 0)
-        {
+        std::vector<Real> energies = {KE, FE};
+        energy.push_back(energies);
+        // energy.push_back({KE, FE});
+        
+        if (step == 0) {
             std::clock_t t_1 = std::clock();
             diff = Real(t_1 - t_0);
             simulationTime = (diff / CLOCKS_PER_SEC);

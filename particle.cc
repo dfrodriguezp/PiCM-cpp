@@ -3,8 +3,7 @@
 
 #include <valarray>
 #include <string>
-struct Particle
-{
+struct Particle {
     std::valarray<double> position_;
     std::valarray<double> velocity_;
     double qm_;
@@ -15,9 +14,7 @@ struct Particle
     Particle(std::valarray<double> position,
         std::valarray<double> velocity,
         double electronicDensity, double qm, bool move
-        )
-
-    {
+        ) {
         position_ = position;
         velocity_ = velocity;
         qm_ = qm;
