@@ -2,15 +2,16 @@
 
 typedef size_t Index;
 typedef double Real;
-typedef std::vector<std::valarray<Real>> VecVal;
-typedef std::vector<std::vector<std::valarray<Real>>> VecVecVal;
+typedef std::valarray<Real> Array;
+typedef std::vector<Array> VecVal;
+typedef std::vector<VecVal> VecVecVal;
 typedef std::complex<Real> Complex;
 typedef std::valarray<Complex> CArray;
 typedef std::vector<std::vector<Real>> VecVec;
 
-VecVal valarraysVector(const Index& rows, const Index& cols) {
+VecVal valarraysVector(const Index& rows, const Index& cols, const Real& value) {
     VecVal f;
-    std::valarray<Real> zeros(0.0, cols);
+    Array zeros(value, cols);
     for (Index i = 0; i < rows; ++i) {
         f.push_back(zeros);
     }
@@ -20,19 +21,19 @@ VecVal valarraysVector(const Index& rows, const Index& cols) {
 // INITIALIZATION OF THE SYSTEM
 
 std::vector<Particle> two_stream() {
-    const int N = parameters::N;
-    const Real vt = parameters::vt;
-    const Real vd = parameters::vd;
-    const int gridPoints = parameters::gp;
-    const Real dr = parameters::dr;
+    const int N = params::N;
+    const Real vt = params::vt;
+    const Real vd = params::vd;
+    const int gridPoints = params::gp;
+    const Real dr = params::dr;
     const Real L = dr * Real(gridPoints - 1);
     const Real n = N / (L * L);
     const Real margin = dr / 10.0;
     std::mt19937_64 engine;
     std::normal_distribution<Real> vel_left(vd, vt);
     std::normal_distribution<Real> vel_right(-vd, vt);
-    std::vector<std::valarray<Real>> pos;
-    std::vector<Real> indexes;
+    VecVal pos;
+    std::vector<Real> neutro;
     std::vector<Real> right;
     std::vector<Real> left;
     std::vector<Particle> parts;
@@ -45,49 +46,67 @@ std::vector<Particle> two_stream() {
         }
     }
 
-    for (Index i = 0; i < N; ++i) {
-        indexes.push_back(i);
+    // for (auto p : pos) {
+    //     for (auto i : p) {
+    //         std::cout << i << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+    // for (Index i = 0; i < N; ++i) {
+    //     indexes.push_back(i);
+    // }
+
+    // std::random_shuffle(indexes.begin(), indexes.end());
+    Index beam = Index(N / 4);
+
+    // for (Index i = N-1; i >= N-beam; --i) {
+    //     right.push_back(indexes[i]);
+    //     indexes.pop_back();
+    // }
+
+    // for (Index i = N-beam-1; i >= Index(N/2); --i) {
+    //     left.push_back(indexes[i]);
+    //     indexes.pop_back();
+    // }
+
+    for (Index i = 0; i < Index(N / 2); i++) {
+        neutro.push_back(i);
     }
 
-    std::random_shuffle(indexes.begin(), indexes.end());
-    Index electronBeam = Index(N / 4);
-
-    for (Index i = N-1; i >= N-electronBeam; --i) {
-        right.push_back(indexes[i]);
-        indexes.pop_back();
+    for (Index i = Index(N / 2); i < N-beam; i++) {
+        right.push_back(i);
     }
 
-    for (Index i = N-electronBeam-1; i >= Index(N/2); --i) {
-        left.push_back(indexes[i]);
-        indexes.pop_back();
+    for (Index i = N-beam; i < N; i++) {
+        left.push_back(i);
     }
 
-    for (auto i = left.begin(); i != left.end(); ++i) {
-        parts.push_back(Particle(pos[*i], {vel_left(engine), 0.0, 0.0}, n, -1.0, true));
+    for (auto i : right) {
+        parts.push_back(Particle(pos[i], {0.1, 0.0, 0.0}, n, -1.0, true));
     }
 
-    for (auto i = right.begin(); i != right.end(); ++i) {
-        parts.push_back(Particle(pos[*i], {vel_right(engine), 0.0, 0.0}, n, -1.0, true));
+    for (auto i : left) {
+        parts.push_back(Particle(pos[i], {-0.1, 0.0, 0.0}, n, -1.0, true));
     }
 
-    for (auto i = indexes.begin(); i != indexes.end(); ++i) {
-        parts.push_back(Particle(pos[*i], {0.0, 0.0, 0.0}, n, 1.0, false));
+    for (auto i : neutro) {
+        parts.push_back(Particle(pos[i], {0.0, 0.0, 0.0}, n, 1.0, false));
     }
 
     return parts;
 }
 
 std::vector<Particle> random_particles() {
-    const Index N = parameters::N;
-    const Real vd = parameters::vd;
-    const Index gridPoints = parameters::gp;
-    const Real dr = parameters::dr;
+    const Index N = params::N;
+    const Real vd = params::vd;
+    const Index gridPoints = params::gp;
+    const Real dr = params::dr;
     const Real L = dr * Real(gridPoints - 1);
     const Real n = N / (L * L);
     std::mt19937_64 engine;
     std::uniform_real_distribution<Real> vel(-vd, vd);
     std::uniform_real_distribution<Real> posi(0, L);
-    std::vector<std::valarray<Real>> pos;
+    VecVal pos;
     std::vector<Particle> parts;
 
     for (Index i = 0; i < N; ++i) {
@@ -101,10 +120,11 @@ std::vector<Particle> random_particles() {
     return parts;
 }
 
-VecVal density(std::vector<Particle>& particles, const std::vector<Real>& rho_c, const Real& dr) {
-    const Index gp = parameters::gp;
-    const Index N = parameters::N;
-    VecVal rho = valarraysVector(gp, gp);
+VecVal density(std::vector<Particle>& particles, const std::vector<Real>& rho_c) {
+    const Index gp = params::gp;
+    const Index N = params::N;
+    const Real dr = params::dr;
+    VecVal rho = valarraysVector(gp, gp, 0.0);
 
     for (Index p = 0; p < N; ++p) {
         Index i = std::floor(particles[p].position_[0] / dr);
@@ -119,13 +139,13 @@ VecVal density(std::vector<Particle>& particles, const std::vector<Real>& rho_c,
     }
 
     for (Index u = 0; u < gp; ++u) {
-        rho[gp - 1][u] = (rho[gp - 1][u] + rho[0][u]) * 0.5;
-        rho[0][u] = rho[gp - 1][u];
+        rho[gp-1][u] = (rho[gp-1][u] + rho[0][u]) * 0.5;
+        rho[0][u] = rho[gp-1][u];
     }
 
     for (Index u = 0; u < gp; ++u) {
-        rho[u][gp - 1] = (rho[u][gp - 1] + rho[u][0]) * 0.5;
-        rho[u][0] = rho[u][gp - 1];
+        rho[u][gp-1] = (rho[u][gp-1] + rho[u][0]) * 0.5;
+        rho[u][0] = rho[u][gp-1];
     }
 
     for (Index i = 0; i < gp; ++i) {
@@ -135,8 +155,9 @@ VecVal density(std::vector<Particle>& particles, const std::vector<Real>& rho_c,
     return rho;
 }
 
-VecVal potential(const VecVal& rho, const Real& dr) {   
-    const Index gp = parameters::gp;
+VecVal potential(const VecVal& rho) {   
+    const Index gp = params::gp;
+    const Real dr = params::dr;
     Complex rho_k[gp][gp];
 
     for (Index i = 0; i < gp; ++i) {
@@ -217,7 +238,7 @@ VecVal potential(const VecVal& rho, const Real& dr) {
         }
     }
 
-    VecVal phi = valarraysVector(gp, gp);
+    VecVal phi = valarraysVector(gp, gp, 0.0);
     for (Index i = 0; i < gp; ++i) {
         for (Index j = 0; j < gp; ++j) {
             phi[i][j] = std::real(phi_k[i][j]);
@@ -227,10 +248,11 @@ VecVal potential(const VecVal& rho, const Real& dr) {
     return phi;
 }
 
-VecVecVal EField_GP(const VecVal& phi, const Real& dr) {
-    const Index gp = parameters::gp;
+VecVecVal EField_GP(const VecVal& phi) {
+    const Index gp = params::gp;
+    const Real dr = params::dr;
     VecVecVal E;
-    std::valarray<Real> zeros(0.0, 3);
+    Array zeros(0.0, 3);
     for (Index i = 0; i < gp; ++i) {   
         VecVal rows;
         for (Index j = 0; j < gp; ++j) {
@@ -260,9 +282,10 @@ VecVecVal EField_GP(const VecVal& phi, const Real& dr) {
     return E;
 }
 
-VecVal EField_P(const VecVecVal& field, const std::vector<Particle>& particles, const Real& dr) {
-    const Index N = parameters::N;
-    VecVal E = valarraysVector(N, 3);
+VecVal EField_P(const VecVecVal& field, const std::vector<Particle>& particles) {
+    const Index N = params::N;
+    const Real dr = params::dr;
+    VecVal E = valarraysVector(N, 3, 0.0);
 
     for (Index p = 0; p < N; ++p) {
         if (particles[p].move_) {
@@ -288,11 +311,11 @@ VecVal EField_P(const VecVecVal& field, const std::vector<Particle>& particles, 
     return E;
 }
 
-Real norm(const std::valarray<Real>& Array) {
-    return std::sqrt((Array * Array).sum());
+Real norm(const Array& A) {
+    return std::sqrt((A * A).sum());
 }
 
-inline std::valarray<Real> cross(const std::valarray<Real>& A, const std::valarray<Real>& B) {
+inline Array cross(const Array& A, const Array& B) {
     return {A[1] * B[2] - A[2] * B[1], A[2] * B[0] - A[0] * B[2], A[0] * B[1] - A[1] * B[0]};
 }
 
@@ -300,16 +323,16 @@ inline Real mod(const Real& a, const Real& b) {
     return (a < 0) ? std::fmod((a + (std::floor(-a / b) + 1) * b), b) : (std::fmod(a, b));
 }
 
-void Boris(const VecVal& E, const std::valarray<Real>& extE, const std::valarray<Real>& B, std::vector<Particle>& particles) {
-    const Real L = parameters::dr * Real(parameters::gp - 1);
-    const Real dt = parameters::dt;
-    const Index N = parameters::N;
-    std::valarray<Real> t;
+void Boris(const VecVal& E, const Array& extE, const Array& B, std::vector<Particle>& particles) {
+    const Real L = params::dr * Real(params::gp - 1);
+    const Real dt = params::dt;
+    const Index N = params::N;
+    Array t;
     Real t_2;
-    std::valarray<Real> s;
-    std::valarray<Real> v_minus;
-    std::valarray<Real> v_prime;
-    std::valarray<Real> v_plus;
+    Array s;
+    Array v_minus;
+    Array v_prime;
+    Array v_plus;
 
     for (Index p = 0; p < N; ++p) {
         if (particles[p].move_) {
@@ -329,15 +352,15 @@ void Boris(const VecVal& E, const std::valarray<Real>& extE, const std::valarray
     }
 }
 
-void outPhase(const Real& direction, const VecVal& E, const std::valarray<Real>& extE, const std::valarray<Real>& B, std::vector<Particle>& particles) {
-    const Real dt = direction * 0.5 * parameters::dt;
-    const Index N = parameters::N;
-    std::valarray<Real> t;
+void outPhase(const Real& direction, const VecVal& E, const Array& extE, const Array& B, std::vector<Particle>& particles) {
+    const Real dt = direction * 0.5 * params::dt;
+    const Index N = params::N;
+    Array t;
     Real t_2;
-    std::valarray<Real> s;
-    std::valarray<Real> v_minus;
-    std::valarray<Real> v_prime;
-    std::valarray<Real> v_plus;
+    Array s;
+    Array v_minus;
+    Array v_prime;
+    Array v_plus;
 
     for (Index p = 0; p < N; ++p) {
         if (particles[p].move_) {
@@ -383,11 +406,11 @@ void writeData(std::string filename, std::string sname, const VecVec& data) {
     H5Pset_szip(dcpl_id, szip_options_mask, pixels_per_block);  
 
     if (sname == "mesh" || sname == "energy") {
-        chunk_dims[0] = Index(NX / 5);
+        chunk_dims[0] = Index(NX / 1);
         chunk_dims[1] = 1;
     } else {
         chunk_dims[0] = 1;
-        chunk_dims[1] = Index(NY / 5);
+        chunk_dims[1] = Index(NY / 1);
     }
 
     H5Pset_chunk(dcpl_id, 2, chunk_dims);
@@ -411,6 +434,13 @@ void writeData(std::string filename, std::string sname, const VecVec& data) {
         H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset, stride, count, block);
         H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, memspace_id, dataspace_id, H5P_DEFAULT, data.at(i).data());
     }
+
+    // dataset_id = H5Dcreate2(file_id, sname.c_str(), H5T_IEEE_F64LE, dataspace_id,
+    //                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    
+    // for (Index i = 0; i < NX; i++) {
+    //     H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.at(i).data());
+    // }    
 
     std::cout << sname << " written" << std::endl;
     H5Sclose(dataspace_id);
