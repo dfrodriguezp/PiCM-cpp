@@ -6,3 +6,6 @@
 # binaries
 *.o
 main
+
+#json files
+*.json
