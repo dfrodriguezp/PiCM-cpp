@@ -1,167 +1,196 @@
-#include "initial.h"
-#include <fstream>
-#include <string>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
+#include "mesh.h"
 
-void printVecVal(VecVal& A) {
-    for (Index i = 0; i < A.size(); i++) {
-        std::cout << "[";
-        for (Index j = 0; j < A.at(i).size(); j++) {
-            std::cout << A[i][j] << " ";
-        }
-        std::cout << "\b]" << std::endl;
-    }
-}
+Index steps, seed, gp, N;
+Real  L, dr, dt, vt, vd, Bx, By, Bz;
+Str   samplefile;
 
 int main(int argc, char const *argv[]) {
-    srand(params::seed);
+
+    if (argc < 2) {
+        std::cout << "ERROR: please include a parameters json file." << std::endl;
+    }
+
+    Json::Value root;
+    Json::Reader reader;
+    Str jsonfile = argv[1];
+    std::ifstream data(jsonfile, std::ifstream::binary);
+    if (!reader.parse(data, root, false)) {
+        std::cout << "json file not found." << std::endl;
+    }
+
+    steps = root.get("steps", 50).asInt();
+    gp =    root.get("npoints", 8).asInt();
+    dt =    root.get("dt", 0.1).asDouble();
+    N =     root["N"].asInt();
+    dr =    root["dr"].asDouble();
+    vt =    root["vt"].asDouble();
+    vd =    root["vd"].asDouble();
+    Json::Value Bfield = root["B"];
+    Bx =    Bfield.get("Bx", 0.0).asDouble();
+    By =    Bfield.get("By", 0.0).asDouble();
+    Bz =    Bfield.get("Bz", 0.0).asDouble();
+    samplefile = root["output"].asString();
+
     std::vector<Particle> parts;
-    const Index N = params::N;
-    const Index gp = params::gp;
-    const Real dr = params::dr;
-    const Index steps = params::steps;
+    Mesh mesh = Mesh();
 
-    // External magnetic field
-    const Real Bx = params::Bx;
-    const Real By = params::By;
-    const Real Bz = params::Bz;
-
-    // External electric field
-    const Real Ex = params::Ex;
-    const Real Ey = params::Ey;
-    const Real Ez = params::Ez;
+    std::ifstream sample(samplefile);
+    Real x, y, z, vx, vy, vz, n_r, qm;
+    Index move;
+    
+    for (Index i = 0; i < N; i++) {
+        sample >> x >> y >> z >> vx >> vy >> vz >> n_r >> qm >> move;
+        Array pos = {x, y, z};
+        Array vel = {vx, vy, vz};
+        parts.push_back(Particle(pos, vel, n_r, qm, move));
+    }
 
     Array B = {Bx, By, Bz};
-    Array E = {Ex, Ey, Ez};
-
-    // External electric potential
-
-    if (params::system == "two stream"){
-        parts = two_stream();
-    } else if (params::system == "random") {
-        parts = random_particles();    
-    }
-
-    std::vector<Real> rho_c;
-    std::vector<Index> mobileParticles;
-
-    for (Index p = 0; p < N; p++) {
-        rho_c.push_back(parts[p].q_ / (dr * dr));
-        if (parts.at(p).move_) {
-            mobileParticles.push_back(p);
-        }
-    }
-
-    const Index Nm = mobileParticles.size();
-
-    // Data output
-    VecVec spaceX(Nm);
-    VecVec spaceY(Nm);
-    VecVec spaceZ(Nm);
-    VecVec velocityX(Nm);
-    VecVec velocityY(Nm);
-    VecVec velocityZ(Nm);
-    VecVec mesh;
-    VecVec rho(gp * gp);
-    VecVec phi(gp * gp);
-    VecVec fieldX(gp * gp);
-    VecVec fieldY(gp * gp);
-    VecVec energy;
-
-    // Write mesh (only once)
-    for (Index i = 0; i < gp; ++i) {
-        for (Index j = 0; j < gp; ++j)
-            mesh.push_back({i * dr, j * dr});
-    }
-
+    L = dr * (gp - 1);
     std::vector<Particle> finalParts;
+    
+    // VecVec pos_x(N);
+    // VecVec pos_y(N);
+    // VecVec pos_z(N);
+    // VecVec vel_x(N);
+    // VecVec vel_y(N);
+    // VecVec vel_z(N);
+    // VecVec mesh_write;
+    // VecVec rho(n * n);
+    // VecVec phi(n * n);
+    // VecVec field_x(n * n);
+    // VecVec field_y(n * n);
+    // VecVec energy;
+
+    // // Write mesh 
+    // for (Index i = 0; i < n; ++i) {
+    //     for (Index j = 0; j < n; ++j)
+    //         mesh_write.push_back({i * dr, j * dr});
+    // }
+
+    std::vector<Str> folders = {"/positions", "/velocities", "/density", "/potential", "/Efield", "/energy"};
+
+    for (Index f = 0; f < folders.size(); ++f) {
+        std::system(("mkdir -p results" + folders[f]).c_str());
+    }
 
     std::cout << "\nSimulation running...\n" << std::endl;
     std::clock_t t_0 = std::clock();
     Real simulationTime;
     Real diff;
 
-    VecVal      RHO, PHI, EFIELDp;
-    VecVecVal   EFIELDn;
-    Real        KE, FE;
+    Real KE, FE;
+    std::ofstream energy;
+    std::ofstream positions;
+    std::ofstream velocities;
+    std::ofstream density;
+    std::ofstream potential;
+    std::ofstream Efield;
+    energy.open("results/energy/energy.dat");
 
     for (Index step = 0; step < steps; ++step) {
-        RHO = density(parts, rho_c);
-        PHI = potential(RHO);
-        EFIELDn = EField_GP(PHI);
-        EFIELDp = EField_P(EFIELDn, parts);
+        mesh.updateDensity(parts);
+        mesh.updatePotential();
+        mesh.updateEfield();
 
-        if (step == 0) {
-            outPhase(-1.0, EFIELDp, E, B, parts);
+        for (Index p = 0; p < parts.size(); ++p) {
+            parts[p].fieldInfluence(mesh.getEfield());
+            if (step == 0) {
+                parts[p].outPhase(-1, B);
+            }
+            parts[p].update(B);
         }
 
-        Boris(EFIELDp, E, B, parts);
         finalParts = parts;
-        outPhase(1.0, EFIELDp, E, B, finalParts);
+
+        for (Index p = 0; p < finalParts.size(); ++p) {
+            finalParts[p].outPhase(1, B);
+        }
+
+        if (mod(step, 10) == 0) {
+            positions.open("results/positions/step_" + std::to_string(step) + ".dat");
+            velocities.open("results/velocities/step_" + std::to_string(step) + ".dat");
+            density.open("results/density/step_" + std::to_string(step) + ".dat");
+            potential.open("results/potential/step_" + std::to_string(step) + ".dat");
+            Efield.open("results/Efield/step_" + std::to_string(step) + ".dat");
+        }
+
         KE = 0.0;
         FE = 0.0;
 
-        for (size_t p = 0; p < Nm; ++p) {
-            spaceX.at(p).push_back(finalParts.at(p).position_[0]);
-            spaceY.at(p).push_back(finalParts.at(p).position_[1]);
-            spaceZ.at(p).push_back(finalParts.at(p).position_[2]);
-            velocityX.at(p).push_back(finalParts.at(p).velocity_[0]);
-            velocityY.at(p).push_back(finalParts.at(p).velocity_[1]);
-            velocityZ.at(p).push_back(finalParts.at(p).velocity_[2]);
-            KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);    
+        for (Index p = 0; p < N; ++p) {
+            if (finalParts.at(p).Move() == 1) {
+                if (mod(step, 10) == 0) {
+                    positions << finalParts.at(p).getPosition()[0] << " " << finalParts.at(p).getPosition()[1] << "\n";
+                    velocities << finalParts.at(p).getVelocity()[0] << " " << finalParts.at(p).getVelocity()[1] << "\n";
+                }
+                KE += finalParts.at(p).getMass() * norm(finalParts.at(p).getVelocity()) * norm(finalParts.at(p).getVelocity());
+            }
+            // pos_x.at(p).push_back(finalParts.at(p).getPosition()[0]);
+            // pos_y.at(p).push_back(finalParts.at(p).getPosition()[1]);
+            // vel_x.at(p).push_back(finalParts.at(p).getVelocity()[0]);
+            // vel_y.at(p).push_back(finalParts.at(p).getVelocity()[1]);
+            // vel_z.at(p).push_back(finalParts.at(p).getVelocity()[2]);
         }
 
         KE *= 0.5;
 
         for (Index i = 0; i < gp; ++i) {
             for (Index j = 0; j < gp; ++j) {
-                Index index = i * gp + j;
-                rho.at(index).push_back(RHO[i][j]);
-                phi.at(index).push_back(PHI[i][j]);
-                fieldX.at(index).push_back(EFIELDn[i][j][0]);
-                fieldY.at(index).push_back(EFIELDn[i][j][1]);
-                FE += RHO[i][j] * PHI[i][j];
+                if (mod(step, 10) == 0) {
+                    density << i * dr << " " << j * dr << " " << mesh.getRho()[i][j] << "\n";
+                    potential << i * dr << " " << j * dr << " " << mesh.getPhi()[i][j] << "\n";
+                    Efield << i * dr << " " << j * dr << " " << mesh.getEfield()[i][j][0] << " " << mesh.getEfield()[i][j][1] << "\n";
+                }
+                // Index index = i * n + j;
+                // rho.at(index).push_back(mesh.getRho()[i][j]);
+                // phi.at(index).push_back(mesh.getPhi()[i][j]);
+                // field_x.at(index).push_back(mesh.getEfield()[i][j][0]);
+                // field_y.at(index).push_back(mesh.getEfield()[i][j][1]);
+
+                FE += mesh.getRho()[i][j] * mesh.getPhi()[i][j];
             }
         }
 
         FE *= 0.5;
-        
-        energy.push_back({KE, FE});
-        
+        energy << step << " " << KE << " " << FE << "\n";
+        // energy.push_back({KE, FE});
+        positions.close();
+        velocities.close();
+        density.close();
+        potential.close();
+        Efield.close();
+
         if (step == 0) {
             std::clock_t t_1 = std::clock();
             diff = Real(t_1 - t_0);
             simulationTime = (diff / CLOCKS_PER_SEC);
         }
-
-        std::cout << "Aproximate time remaining: " << simulationTime * (steps - step) << " seconds." << std::endl;
+        std::cout << "Aproximate time remaining: " << simulationTime * (steps - step) << " seconds..." << std::endl;
     }
 
-    std::cout << "\nSimulation finished." << std::endl; 
-    std::cout << "\n************************************************\n" << std::endl;
-    std::cout << "Writing data...\n" << std::endl;
+    energy.close();
+    std::cout << "\nSimulation finished!\n" << std::endl; 
+    std::cout << "\n*****************************************************************************\n" << std::endl;
+    // std::cout << "Writing data...\n" << std::endl;
 
-    H5Fcreate(params::dataOutput.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    // H5Fcreate(output.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    // writeData(output, "position_x", pos_x);
+    // writeData(output, "position_y", pos_y);
 
-    writeData(params::dataOutput, "space_x", spaceX);
-    writeData(params::dataOutput, "space_y", spaceY);
-    writeData(params::dataOutput, "space_z", spaceZ);
+    // writeData(output, "velocity_x", vel_x);
+    // writeData(output, "velocity_y", vel_y);
+    // writeData(output, "velocity_z", vel_z);
 
-    writeData(params::dataOutput, "velocity_x", velocityX);
-    writeData(params::dataOutput, "velocity_y", velocityY);
-    writeData(params::dataOutput, "velocity_z", velocityZ);
+    // writeData(output, "mesh", mesh_write);
+    // writeData(output, "rho", rho);
+    // writeData(output, "phi", phi);
+    // writeData(output, "field_x", field_x);
+    // writeData(output, "field_y", field_y);
+    // writeData(output, "energy", energy);
 
-    writeData(params::dataOutput, "mesh", mesh);
-    writeData(params::dataOutput, "rho", rho);
-    writeData(params::dataOutput, "phi", phi);
-    writeData(params::dataOutput, "fieldX", fieldX);
-    writeData(params::dataOutput, "fieldY", fieldY);
-    writeData(params::dataOutput, "energy", energy);
-
-    std::cout << "\nDone!" << std::endl;
-    std::cout << "\n************************************************\n" << std::endl;
+    // std::cout << "\nDone!" << std::endl;
+    std::cout << "\n*****************************************************************************\n" << std::endl;
 
     return 0;
 }

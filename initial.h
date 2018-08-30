@@ -1,42 +1,30 @@
-#ifndef FUNCTIONS_H
-#define FUNCTIONS_H
+#ifndef INITIAL_H
+#define INITIAL_H
 
-#include <iostream>
-#include <cmath>
-#include <array>
-#include <valarray>
-#include <vector>
-#include <complex>
-#include <random>
-#include <string>
 #include "/usr/include/hdf5/serial/hdf5.h"
 #include "/usr/include/jsoncpp/json/json.h"
-#include "parameters.h"
-#include "particle.cc"
+#include <fstream>
+#include <vector>
+#include <iostream>
+#include <string>
+#include <valarray>
+#include <complex>
+#include <ctime>
+#include <cstdlib>
 
-typedef size_t Index;
 typedef double Real;
+typedef size_t Index;
+typedef std::string Str;
 typedef std::valarray<Real> Array;
-typedef std::vector<Array> VecVal;
-typedef std::vector<VecVal> VecVecVal;
+typedef std::vector<Array> VecArr;
+typedef std::vector<VecArr> VecVecArr;
 typedef std::complex<Real> Complex;
 typedef std::valarray<Complex> CArray;
 typedef std::vector<std::vector<Real>> VecVec;
 
-std::vector<Particle> two_stream();
-std::vector<Particle> random_particles();
-void fft(CArray& x);
-void ifft(CArray& x);
-VecVal valarraysVector(const Index& rows, const Index& cols, const Real& value);
-VecVal density(std::vector<Particle>& parts, const std::vector<Real>& rho_c);
-VecVal potential(const VecVal& rho);
-VecVecVal EField_GP(const VecVal& phi);
-VecVal EField_P(const VecVecVal& field, const std::vector<Particle>& parts);
-Real norm(const Array& A);
-inline Array cross(const Array& A, const Array& B);
-inline Real mod(const Real& a, const Real& b);
-void Boris(const VecVal& E, const Array& extE, const Array& B, std::vector<Particle>& parts);
-void outPhase(const Real& direction, const VecVal& E, const Array& extE, const Array& B, std::vector<Particle>& parts);
+extern Index steps, seed, gp, N;
+extern Real  L, dr, dt, vt, vd, Bx, By, Bz;
+extern Str   samplefile;
 
 void writeData(std::string filename, std::string sname, const VecVec& data);
 
