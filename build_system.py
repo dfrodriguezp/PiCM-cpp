@@ -1,6 +1,7 @@
 import numpy
 import json
 import click
+import random
 
 @click.command()
 @click.option("-gp", default=8, type=int)
@@ -21,6 +22,7 @@ def main(gp, system, np, dr, dt, vt, vd, extb, steps, seed):
 
     if system == "two_stream":
         pos, vel = two_stream(L, gp, Nm, dr, vt, vd)
+        # pos, vel = prv_tsi(L, gp, np, dr, vt, vd)
 
         datafile = "system_{}.dat".format(system)
 
@@ -84,6 +86,47 @@ def two_stream(L, gp, N, dr, vt, vd):
     vel = numpy.array(vel)
 
     return pos, vel 
+
+def prv_tsi(L, gp, N, dr, vt, vd):
+    margin = dr / 10
+    pos = list()
+    vel = list()
+    indexes = list()
+    right = list()
+    left = list()
+    deltaL = (L - 2.0 * margin) / (numpy.sqrt(N) - 1)
+    for x in numpy.arange(margin, L + deltaL, deltaL):
+        for y in numpy.arange(margin, L + deltaL, deltaL):
+            pos.append([x, y, 0.0])
+
+    for i in range(N):
+        indexes.append(i)
+
+    numpy.random.shuffle(indexes)
+    e_beam = int(N / 4)
+
+    for i in range(N-1, N-e_beam-1, -1):
+        right.append(indexes[i])
+        indexes.pop()
+    for i in range(N-e_beam-1, int(N/2)-1, -1):
+        left.append(indexes[i])
+        indexes.pop()
+    
+    pos_write = list()
+
+    for i in indexes:
+        pos_write.append(pos[i])
+        vel.append([0.0, 0.0, 0.0])
+    for i in right:
+        pos_write.append(pos[i])
+        vel_right = numpy.random.normal(vd, vt)
+        vel.append([vel_right, 0.0, 0.0])
+    for i in left:
+        pos_write.append(pos[i])
+        vel_left = numpy.random.normal(-vd, vt)
+        vel.append([vel_left, 0.0, 0.0])
+
+    return pos_write, vel
 
 if __name__ == '__main__':
     main()
