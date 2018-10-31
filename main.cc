@@ -28,9 +28,9 @@ int main(int argc, char const *argv[])
     double  Bx =    Bfield.get("Bx", 0.0).asDouble();
     double  By =    Bfield.get("By", 0.0).asDouble();
     double  Bz =    Bfield.get("Bz", 0.0).asDouble();
-    double  Ex =    Bfield.get("Ex", 0.0).asDouble();
-    double  Ey =    Bfield.get("Ey", 0.0).asDouble();
-    double  Ez =    Bfield.get("Ez", 0.0).asDouble();
+    double  Ex =    Efield.get("Ex", 0.0).asDouble();
+    double  Ey =    Efield.get("Ey", 0.0).asDouble();
+    double  Ez =    Efield.get("Ez", 0.0).asDouble();
 
     std::vector<std::valarray<double>> positions;
     std::vector<std::valarray<double>> velocities;
