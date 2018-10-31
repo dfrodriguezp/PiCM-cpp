@@ -1,9 +1,15 @@
 # data
 *.dat
+*.h5
+*.txt
 
 # binaries
 *.o
 main
 
+<<<<<<< HEAD
 #json tests
+=======
+#json files
+>>>>>>> 8d82b94d8e2735fa98c823c0b5598e803643b4f2
 *.json
