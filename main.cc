@@ -1,70 +1,75 @@
 #include "functions.h"
-#include <fstream>
-#include <string>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
 
 int main(int argc, char const *argv[])
 {
-    srand(parameters::seed);
-    std::vector<Particle> parts;
-    const int N = parameters::N;
-    const int gridPoints = parameters::gp;
-    const double dr = parameters::dr;
-    const int steps = parameters::steps;
-    const double dt = parameters::dt;
+    if (argc < 2) 
+    {
+        std::cout << "ERROR: please include a parameters json file." << std::endl;
+    }
 
-    // External magnetic field
-    const double Bx = parameters::Bx;
-    const double By = parameters::By;
-    const double Bz = parameters::Bz;
+    Json::Value root;
+    Json::Reader reader;
+    std::string jsonfile = argv[1];
+    std::ifstream data(jsonfile, std::ifstream::binary);
+    if (!reader.parse(data, root, false)) 
+    {
+        std::cout << "json file not found." << std::endl;
+    }
 
-    // External electric field
-    const double Ex = parameters::Ex;
-    const double Ey = parameters::Ey;
-    const double Ez = parameters::Ez;
+    Json::Value Bfield = root["Bfield"];
+    Json::Value Efield = root["Efield"];
+    std::string samplefile = root["sample"].asString();
+    std::string outputName = root["output"].asString();
+    int     steps = root.get("steps", 50).asInt();
+    int     gp =    root.get("npoints", 16).asInt();
+    int     N =     root["N"].asInt();
+    double  dt =    root.get("dt", 0.1).asDouble();
+    double  dr =    root["dr"].asDouble();
+    double  Bx =    Bfield.get("Bx", 0.0).asDouble();
+    double  By =    Bfield.get("By", 0.0).asDouble();
+    double  Bz =    Bfield.get("Bz", 0.0).asDouble();
+    double  Ex =    Bfield.get("Ex", 0.0).asDouble();
+    double  Ey =    Bfield.get("Ey", 0.0).asDouble();
+    double  Ez =    Bfield.get("Ez", 0.0).asDouble();
+
+    std::vector<std::valarray<double>> positions;
+    std::vector<std::valarray<double>> velocities;
+    std::vector<std::valarray<double>> new_velocities;
+    std::vector<double> charges;
+    std::vector<double> QoverM;
+    std::vector<double> masses;
+    std::vector<int> moves;
+
+    std::ifstream sample(samplefile);
+    double x, y, z, vx, vy, vz, charge;
+    int move;
+    
+    for (int i = 0; i < N; ++i) 
+    {
+        sample >> x >> y >> z >> vx >> vy >> vz >> charge >> move;
+        std::valarray<double> pos = {x, y, z};
+        std::valarray<double> vel = {vx, vy, vz};
+        positions.push_back(pos);
+        velocities.push_back(vel);
+        charges.push_back(charge);
+        QoverM.push_back(sign(charge));
+        masses.push_back(charge / sign(charge));
+        moves.push_back(move);
+    }
 
     std::valarray<double> B = {Bx, By, Bz};
     std::valarray<double> E;
+    double L = dr * double(gp);
 
-    // if (int(std::sqrt(N)) * int(std::sqrt(N)) != N) 
-    // {
-    //     std::cout << "Something went wrong: N must be a power of 2." << std::endl;
-    //     return 1;
-    // }
-
-    if (parameters::system == "two stream")
-    {
-        parts = two_stream();
-    }
-    else if (parameters::system == "random")
-    {
-        parts = random_particles();    
-    }
-
-    std::vector<double> rho_c;
-
-    for (int p = 0; p < N; ++p)
-    {
-        rho_c.push_back(parts[p].q_ / (dr * dr));
-    }
-
-    std::string mainFolder = parameters::folder;
-
-    // This works on a Linux OS.
-    std::string directory = "~/Desktop/" + mainFolder;
-    std::vector<std::string> folders = {"/space", "/phaseSpace", "/velocities", "/rho", "/phi", "/Efield", "/energy"};
+    std::string directory = "/home/daniel/Desktop/" + outputName;
+    std::vector<std::string> folders = {"/phaseSpace", "/phi", "/Efield", "/energy"};
     
     for (int f = 0; f < folders.size(); ++f)
     {
-        system(("mkdir -p " + directory + folders[f]).c_str());
+        std::system(("mkdir -p " + directory + folders[f]).c_str());
     }
 
-    std::vector<Particle> finalParts;
-
     std::cout << "Simulation running..." << std::endl;
-    std::clock_t t_0 = std::clock();
     double simulationTime;
     double diff;
     std::ofstream energy;
@@ -72,10 +77,11 @@ int main(int argc, char const *argv[])
     
     for (int step = 0; step < steps; ++step)
     {
-        VecVal RHO = density(parts, rho_c, dr);
-        VecVal PHI = potential(RHO, dr);
-        VecVecVal EFIELDn = EField_GP(PHI, dr);
-        VecVal EFIELDp = EField_P(EFIELDn, parts, dr);
+        std::clock_t t_0 = std::clock();
+        VecVal RHO = density(positions, charges, dr, gp, N);
+        VecVal PHI = potential(RHO, dr, gp);
+        VecVecVal EFIELDn = EField_GP(PHI, dr, gp);
+        VecVal EFIELDp = EField_P(EFIELDn, positions, moves, dr, gp, N);
 
         if (step < int(0.2 * steps)) 
         {
@@ -89,50 +95,41 @@ int main(int argc, char const *argv[])
 
         if (step == 0)
         {
-            rewind(-1.0, EFIELDp, E, B, parts);
+            outphase(velocities, QoverM, moves, -1.0, EFIELDp, E, B, dt, N);
         }
 
-        Boris(EFIELDp, E, B, parts);
-        finalParts = parts;
-        rewind(1.0, EFIELDp, E, B, finalParts);
+        Boris(positions, velocities, QoverM, moves, EFIELDp, E, B, L, dt, N);
+        new_velocities = velocities;
+        outphase(new_velocities, QoverM, moves, 1.0, EFIELDp, E, B, dt, N);
 
         std::ofstream phaseSpace;
-        std::ofstream space;
-        std::ofstream velocities;
         std::ofstream electricField;
         std::ofstream electricPotential;
-        std::ofstream chargeDensity;
 
         phaseSpace.open(directory + "/phaseSpace/step" + std::to_string(step) + ".dat");
-        space.open(directory + "/space/step" + std::to_string(step) + ".dat");
-        velocities.open(directory + "/velocities/step" + std::to_string(step) + ".dat");
         electricField.open(directory + "/Efield/step" + std::to_string(step) + ".dat");
         electricPotential.open(directory + "/phi/step" + std::to_string(step) + ".dat");
-        chargeDensity.open(directory + "/rho/step" + std::to_string(step) + ".dat");
 
         double KE = 0.0;
         double FE = 0.0;
 
         for (int p = 0; p < N; ++p)
         {
-            if (finalParts[p].move_)
+            if (moves.at(p))
             {
-                phaseSpace << finalParts[p].position_[0] << " " << finalParts[p].velocity_[0] << "\n";
-                space << finalParts[p].position_[0] << " " << finalParts[p].position_[1] << "\n";
-                velocities << finalParts[p].velocity_[0] << " " << finalParts[p].velocity_[1] << " " << finalParts[p].velocity_[2] << "\n";
-                KE += finalParts[p].m_ * norm(finalParts[p].velocity_) * norm(finalParts[p].velocity_);
+                phaseSpace << positions.at(p)[0] << " " << new_velocities.at(p)[0] << "\n";
+                KE += masses.at(p) * norm(new_velocities.at(p)) * norm(new_velocities.at(p));
             }          
         }
 
         KE *= 0.5;
 
-        for (int i = 0; i < gridPoints; ++i)
+        for (int i = 0; i < gp; ++i)
         {
-            for (int j = 0; j < gridPoints; ++j)
+            for (int j = 0; j < gp; ++j)
             {
                 electricField << i * dr << " " << j * dr << " " << EFIELDn[i][j][0] << " " << EFIELDn[i][j][1] << "\n";
                 electricPotential << i * dr << " " << j * dr << " " << PHI[i][j] << "\n";
-                chargeDensity << i * dr << " " << j * dr << " " << RHO[i][j] << "\n";
                 FE += RHO[i][j] * PHI[i][j];
             }
         }
@@ -142,11 +139,8 @@ int main(int argc, char const *argv[])
         energy << step << " " << KE << " " << FE << "\n";
         
         phaseSpace.close();
-        space.close();
-        velocities.close();
         electricField.close();
         electricPotential.close();
-        chargeDensity.close();
         
         if (step == 0)
         {
@@ -155,7 +149,7 @@ int main(int argc, char const *argv[])
             simulationTime = (diff / CLOCKS_PER_SEC);
         }
 
-        std::cout << "Aproximate time remaining: " << simulationTime * (steps - step) << " seconds." << std::endl;
+        std::cout << "ETR: " << simulationTime * (steps - step) << " seconds..." << std::endl;
     }
     
     energy.close();  

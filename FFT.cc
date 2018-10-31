@@ -1,6 +1,6 @@
 #include "functions.h"
  
-const double PI = constants::pi;
+const double PI = std::acos(-1.0);
  
 typedef std::complex<double> Complex;
 typedef std::valarray<Complex> CArray;
