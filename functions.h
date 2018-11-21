@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <cmath>
-#include <array>
 #include <valarray>
 #include <vector>
 #include <complex>
@@ -15,43 +14,63 @@
 #include "/usr/include/jsoncpp/json/json.h"
 
 
-typedef std::complex<double> Complex;
+typedef size_t Int;
+typedef double Real;
+typedef std::valarray<Real> Array;
+typedef std::vector<Array> VecArr;
+typedef std::vector<VecArr> VecVecArr;
+typedef std::complex<Real> Complex;
 typedef std::valarray<Complex> CArray;
-typedef std::vector<std::valarray<double>> VecVal;
-typedef std::vector<std::vector<std::valarray<double>>> VecVecVal;
+
+Real sign(Real& x);
+
+Real norm(const Array& A);
+
+inline Array cross(const Array& A, const Array& B);
+
+Real mod(const Real& a, const Real& b);
+
+VecArr valarraysVector(const Int& rows, const Int& cols);
+
+VecArr density(const VecArr& positions, 
+               const std::vector<Real>& charges, const Real& dx, 
+               const Real& dy, const Int& Nx, const Int& Ny, const Int& N);
+
+VecArr potential(const VecArr& rho, const Real& dx, const Real& dy, 
+                 const Int& Nx, const Int& Ny);
+
+VecVecArr fieldNodes(const VecArr& phi, const Real& dx, const Real& dy, 
+                     const Int& Nx, const Int& Ny);
+
+VecArr fieldParticles(const VecVecArr& field, 
+                      const VecArr& positions,
+                      const std::vector<Int>& moves, 
+                      const Real& dx, const Real& dy, 
+                      const Int& Nx, const Int& Ny, const Int& N);
+
+void boris(VecArr& velocities,
+           const std::vector<Real>& QoverM,
+           const std::vector<Int>& moves,
+           const VecArr& E, const Array& B, 
+           const Real& dt, const Int& N);
+
+void update(VecArr& positions,
+           VecArr& velocities,
+           const std::vector<Real>& QoverM,
+           const std::vector<Int>& moves,
+           const VecArr& E, const Array& B, 
+           const Real& Lx, const Real& Ly, 
+           const Real& dt, const Int& N);
+
+void outphase(const Real& direction,
+              VecArr& velocities,
+              const std::vector<Real>& QoverM,
+              const std::vector<Int>& moves,
+              const VecArr& E, const Array& B, 
+              const Real& dt, const Int& N);
 
 void fft(CArray& x);
+
 void ifft(CArray& x);
-double sign(double& x);
-VecVal valarraysVector(const int& rows, const int& cols);
-VecVal density(const std::vector<std::valarray<double>>& positions, 
-               const std::vector<double>& charges, const double& dr, 
-               const int& gp, const int& N);
-
-VecVal potential(const VecVal& rho, const double& dr, const int& gp);
-VecVecVal EField_GP(const VecVal& phi, const double& dr, const int& gp);
-VecVal EField_P(const VecVecVal& field, 
-                const std::vector<std::valarray<double>>& positions,
-                const std::vector<int>& moves, 
-                const double& dr, const int& gp, const int& N);
-
-double norm(const std::valarray<double>& Array);
-inline std::valarray<double> cross(const std::valarray<double>& A, const std::valarray<double>& B);
-inline double mod(const double& a, const double& b);
-void Boris(std::vector<std::valarray<double>>& positions, 
-           std::vector<std::valarray<double>>& velocities,
-           const std::vector<double>& QoverM,
-           const std::vector<int>& moves,
-           const VecVal& E, const std::valarray<double>& extE, 
-           const std::valarray<double>& B, 
-           const double& L, const double& dt, const int& N);
-
-void outphase(std::vector<std::valarray<double>>& velocities,
-              const std::vector<double>& QoverM,
-              const std::vector<int>& moves,
-              const double& direction, const VecVal& E, 
-              const std::valarray<double>& extE, 
-              const std::valarray<double>& B, 
-              const double& dt, const int& N);
 
 #endif
