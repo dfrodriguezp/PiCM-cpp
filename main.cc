@@ -28,8 +28,6 @@ int main(int argc, char const *argv[])
     bool    writeRho = results.get("charge_density", false).asBool();
 
     Int     steps = root.get("steps", 50).asInt();
-    Int     Nx =    root.get("Nx", 16).asInt();
-    Int     Ny =    root.get("Ny", 16).asInt();
     Int     N =     root["N"].asInt();
     Int     ss_freq = root.get("ss_frequency", 10).asInt();
     Int     seed =  root.get("seed", 69696969).asInt();
@@ -59,6 +57,29 @@ int main(int argc, char const *argv[])
     else
     {
         B = {0.0, 0.0, 0.0};
+    }
+
+    Int Nx, Ny;
+
+    Json::Value gridSize;
+    if (root.isMember("grid_size"))
+    {
+        gridSize = root["grid_size"];
+        if (gridSize.size() != 2)
+        {
+            std::cout << "Grid size must have two components!" << std::endl;
+            return 1;
+        }
+        else
+        {
+            Nx = gridSize[0].asInt();
+            Ny = gridSize[1].asInt();
+        }
+    }
+    else
+    {
+        Nx = 16;
+        Ny = 16;
     }
 
     Real Lx = dx * Real(Nx);
