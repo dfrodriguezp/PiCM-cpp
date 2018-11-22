@@ -10,7 +10,7 @@ main: $(binaries)
 main.o: main.cc
 	$(CC) $(CFLAGS) -c main.cc -o main.o
 
-functions.o: functions.cc
+functions.o: functions.cc functions.h
 	$(CC) $(CFLAGS) -c functions.cc -o functions.o
 
 FFT.o: FFT.cc

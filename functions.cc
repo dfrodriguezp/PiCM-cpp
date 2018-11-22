@@ -1,13 +1,5 @@
 #include "functions.h"
 
-typedef size_t Int;
-typedef double Real;
-typedef std::valarray<Real> Array;
-typedef std::vector<Array> VecArr;
-typedef std::vector<VecArr> VecVecArr;
-typedef std::complex<Real> Complex;
-typedef std::valarray<Complex> CArray;
-
 Real sign(Real& x)
 {
     if (x < 0) return -1.0;
@@ -15,20 +7,24 @@ Real sign(Real& x)
     else return 0.0;
 }
 
+
 Real norm(const Array& A)
 {
     return std::sqrt((A * A).sum());
 }
+
 
 inline Array cross(const Array& A, const Array& B)
 {
     return {A[1] * B[2] - A[2] * B[1], A[2] * B[0] - A[0] * B[2], A[0] * B[1] - A[1] * B[0]};
 }
 
+
 Real mod(const Real& a, const Real& b)
 {
     return (a < 0) ? std::fmod((a + (std::floor(-a / b) + 1) * b), b) : (std::fmod(a, b));
 }
+
 
 VecArr valarraysVector(const Int& rows, const Int& cols)
 {
@@ -292,6 +288,7 @@ void boris(VecArr& velocities,
     }
 }
 
+
 void update(VecArr& positions,
            VecArr& velocities,
            const std::vector<Real>& QoverM,
@@ -309,6 +306,7 @@ void update(VecArr& positions,
     }
 
 }
+
 
 void outphase(const Real& direction,
               VecArr& velocities,

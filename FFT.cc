@@ -1,9 +1,6 @@
 #include "functions.h"
  
-const double PI = std::acos(-1.0);
- 
-typedef std::complex<double> Complex;
-typedef std::valarray<Complex> CArray;
+const Real PI = std::acos(-1.0);
  
 // Cooley–Tukey FFT (in-place, divide-and-conquer)
 // Higher memory requirements and redundancy although more intuitive
@@ -36,8 +33,8 @@ typedef std::valarray<Complex> CArray;
 void fft(CArray &x)
 {
 	// DFT
-	unsigned int N = x.size(), k = N, n;
-	double thetaT = 3.14159265358979323846264338328L / N;
+	size_t N = x.size(), k = N, n;
+	Real thetaT = 3.14159265358979323846264338328L / N;
 	Complex phiT = Complex(cos(thetaT), -sin(thetaT)), T;
 	while (k > 1)
 	{
@@ -45,11 +42,11 @@ void fft(CArray &x)
 		k >>= 1;
 		phiT = phiT * phiT;
 		T = 1.0L;
-		for (unsigned int l = 0; l < k; l++)
+		for (size_t l = 0; l < k; l++)
 		{
-			for (unsigned int a = l; a < N; a += n)
+			for (size_t a = l; a < N; a += n)
 			{
-				unsigned int b = a + k;
+				size_t b = a + k;
 				Complex t = x[a] - x[b];
 				x[a] += x[b];
 				x[b] = t * T;
@@ -58,10 +55,10 @@ void fft(CArray &x)
 		}
 	}
 	// Decimate
-	unsigned int m = (unsigned int)log2(N);
-	for (unsigned int a = 0; a < N; a++)
+	size_t m = (size_t)log2(N);
+	for (size_t a = 0; a < N; a++)
 	{
-		unsigned int b = a;
+		size_t b = a;
 		// Reverse bits
 		b = (((b & 0xaaaaaaaa) >> 1) | ((b & 0x55555555) << 1));
 		b = (((b & 0xcccccccc) >> 2) | ((b & 0x33333333) << 2));
@@ -77,7 +74,7 @@ void fft(CArray &x)
 	}
 	//// Normalize (This section make it not working correctly)
 	//Complex f = 1.0 / sqrt(N);
-	//for (unsigned int i = 0; i < N; i++)
+	//for (size_t i = 0; i < N; i++)
 	//	x[i] *= f;
 }
  

@@ -18,9 +18,7 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    Json::Value Bfield = root["Bfield"];
     Json::Value results = root["results"];
-
     std::string samplefile = root["sample"].asString();
     std::string outputName = root["output"].asString();
 
@@ -36,13 +34,35 @@ int main(int argc, char const *argv[])
     Int     ss_freq = root.get("ss_frequency", 10).asInt();
     Int     seed =  root.get("seed", 69696969).asInt();
 
-    Real  dt =    root.get("dt", 0.1).asDouble();
-    Real  dx =    root.get("dx", 1.0).asDouble();
-    Real  dy =    root.get("dy", 1.0).asDouble();
-    Real  Bx =    Bfield.get("Bx", 0.0).asDouble();
-    Real  By =    Bfield.get("By", 0.0).asDouble();
-    Real  Bz =    Bfield.get("Bz", 0.0).asDouble();
+    Real    dt = root.get("dt", 0.1).asDouble();
+    Real    dx = root.get("dx", 1.0).asDouble();
+    Real    dy = root.get("dy", 1.0).asDouble();
 
+    std::valarray<Real> B(3);
+
+    Json::Value Bfield;
+    if (root.isMember("Bfield"))
+    {
+        Bfield = root["Bfield"];
+        if (Bfield.size() != 3)
+        {
+            std::cout << "Magnetic field must have three components!" << std::endl;
+            return 1;
+        }
+        else
+        {
+            B[0] = Bfield[0].asDouble();
+            B[1] = Bfield[1].asDouble();
+            B[2] = Bfield[2].asDouble();
+        }
+    }
+    else
+    {
+        B = {0.0, 0.0, 0.0};
+    }
+
+    Real Lx = dx * Real(Nx);
+    Real Ly = dy * Real(Ny);
     VecArr positions;
     VecArr velocities;
     VecArr new_velocities;
@@ -75,10 +95,6 @@ int main(int argc, char const *argv[])
         moves.push_back(move);
     }
 
-    std::valarray<Real> B = {Bx, By, Bz};
-
-    Real Lx = dx * Real(Nx);
-    Real Ly = dy * Real(Ny);
 
     std::vector<std::string> folders = {"/energy"};
 
@@ -98,10 +114,11 @@ int main(int argc, char const *argv[])
     std::ofstream electricField;
     std::ofstream electricPotential;
     std::ofstream chargeDensity;
-    // energy.open(directory + "/energy/energy.dat");
     
     VecArr RHO, PHI, EFIELDp;
     VecVecArr EFIELDn;
+    Real KE, FE;
+
     energy.open(outputName + "/energy/energy_seed_" + std::to_string(seed) +"_.dat");
 
     for (Int step = 0; step < steps; ++step)
@@ -133,8 +150,8 @@ int main(int argc, char const *argv[])
             chargeDensity.open(outputName + "/rho/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
 
-        Real KE = 0.0;
-        Real FE = 0.0;
+        KE = 0.0;
+        FE = 0.0;
 
         for (Int p = 0; p < N; ++p)
         {
