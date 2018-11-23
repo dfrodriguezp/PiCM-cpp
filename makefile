@@ -7,13 +7,13 @@ binaries = main.o functions.o FFT.o
 main: $(binaries)
 	$(CC) $(CFLAGS) $(binaries) -o main -ljsoncpp
 
-main.o: main.cc functions.h
+main.o: main.cc init.h
 	$(CC) $(CFLAGS) -c main.cc -o main.o
 
-functions.o: functions.cc functions.h
+functions.o: functions.cc init.h
 	$(CC) $(CFLAGS) -c functions.cc -o functions.o
 
-FFT.o: FFT.cc functions.h
+FFT.o: FFT.cc init.h
 	$(CC) $(CFLAGS) -c FFT.cc -o FFT.o
 
 

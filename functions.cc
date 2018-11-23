@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "init.h"
 
 Real sign(Real& x)
 {

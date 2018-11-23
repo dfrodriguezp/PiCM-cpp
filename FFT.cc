@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "init.h"
  
 const Real PI = std::acos(-1.0);
  

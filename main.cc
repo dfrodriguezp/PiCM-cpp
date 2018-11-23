@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "init.h"
 
 int main(int argc, char const *argv[])
 {
@@ -107,20 +107,20 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    Real x, y, vx, vy, vz, charge;
+    Real x, y, vx, vy, vz, q_m, charge;
     Int move;
     
     for (Int i = 0; i < N; ++i) 
     {
-        sample >> x >> y >> vx >> vy >> vz >> charge >> move;
-        // charge = (Nx * Ny * q_m) / N;
+        sample >> x >> y >> vx >> vy >> vz >> q_m >> move;
+        charge = (Lx * Ly * q_m) / N;
         std::valarray<Real> pos = {x, y}; // 2D
         std::valarray<Real> vel = {vx, vy, vz}; // 3V
         positions.push_back(pos);
         velocities.push_back(vel);
-        QoverM.push_back(sign(charge));
+        QoverM.push_back(q_m);
         charges.push_back(charge);
-        masses.push_back(charge / sign(charge));
+        masses.push_back(charge / q_m);
         moves.push_back(move);
     }
 
