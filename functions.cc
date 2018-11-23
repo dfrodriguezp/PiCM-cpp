@@ -19,7 +19,6 @@ inline Array cross(const Array& A, const Array& B)
     return {A[1] * B[2] - A[2] * B[1], A[2] * B[0] - A[0] * B[2], A[0] * B[1] - A[1] * B[0]};
 }
 
-
 Real mod(const Real& a, const Real& b)
 {
     return (a < 0) ? std::fmod((a + (std::floor(-a / b) + 1) * b), b) : (std::fmod(a, b));
@@ -51,8 +50,8 @@ VecArr density(const VecArr& positions,
         Int j = std::floor(positions.at(p)[1] / dy);
         Real hx = positions.at(p)[0] - (i * dx);
         Real hy = positions.at(p)[1] - (j * dy);
-        Int nxt_i = mod(i + 1, Nx);
-        Int nxt_j = mod(j + 1, Ny);
+        Int nxt_i = Int(mod(Real(i + 1), Real(Nx)));
+        Int nxt_j = Int(mod(Real(j + 1), Real(Ny)));
 
         rho[i][j] += charges.at(p) * (dx - hx) * (dy - hy);
         rho[i][nxt_j] += charges.at(p) * (dx - hx) * hy;
@@ -201,9 +200,9 @@ VecVecArr fieldNodes(const VecArr& phi, const Real& dx, const Real& dy,
     {
         for (Int i = 0; i < Nx; ++i)
         {
-            Int nxt_i = mod(i + 1, Nx);
-            Int prv_i = mod(i - 1, Nx);
-            E[i][j][0] = (phi[prv_i][j] - phi[nxt_i][j]) / (dx * 2);
+            Int nxt_i = Int(mod(Real(i + 1), Real(Nx)));
+            Int prv_i = Int(mod(Real(i - 1), Real(Nx)));
+            E[i][j][0] = (phi[prv_i][j] - phi[nxt_i][j]) / (dx * 2.0);
         }
     }
 
@@ -211,10 +210,10 @@ VecVecArr fieldNodes(const VecArr& phi, const Real& dx, const Real& dy,
     {
         for (Int j = 0; j < Ny; ++j)
         {
-            Int nxt_j = mod(j + 1, Ny);
-            Int prv_j = mod(j - 1, Ny);
+            Int nxt_j = Int(mod(Real(j + 1), Real(Ny)));
+            Int prv_j = Int(mod(Real(j - 1), Real(Ny)));
 
-            E[i][j][1] = (phi[i][prv_j] - phi[i][nxt_j]) / (dy * 2);
+            E[i][j][1] = (phi[i][prv_j] - phi[i][nxt_j]) / (dy * 2.0);
         }
     }
 
@@ -238,8 +237,8 @@ VecArr fieldParticles(const VecVecArr& field,
             Int j = std::floor(positions.at(p)[1] / dy);
             Real hx = positions.at(p)[0] - (i * dx);
             Real hy = positions.at(p)[1] - (j * dy);
-            Int nxt_i = mod(i + 1, Nx);
-            Int nxt_j = mod(j + 1, Ny);
+            Int nxt_i = Int(mod(Real(i + 1), Real(Nx)));
+            Int nxt_j = Int(mod(Real(j + 1), Real(Ny)));
 
             Real A = (dx - hx) * (dy - hy);
             Real B = (dx - hx) * hy;
@@ -300,11 +299,13 @@ void update(VecArr& positions,
     boris(velocities, QoverM, moves, E, B, dt, N);
     for (Int p = 0; p < N; ++p)
     {
-        positions.at(p) += velocities.at(p) * dt;
-        positions.at(p)[0] = mod(positions.at(p)[0], Lx);
-        positions.at(p)[1] = mod(positions.at(p)[1], Ly);
+        if (moves.at(p))
+        {
+            positions.at(p) += velocities.at(p) * dt;
+            positions.at(p)[0] = mod(positions.at(p)[0], Lx);
+            positions.at(p)[1] = mod(positions.at(p)[1], Ly);
+        }
     }
-
 }
 
 

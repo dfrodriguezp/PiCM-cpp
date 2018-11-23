@@ -14,7 +14,8 @@
 #include "/usr/include/jsoncpp/json/json.h"
 
 
-typedef size_t Int;
+// typedef size_t Int; // size_t changes the behaviour of some functions, I'm not sure why.
+typedef int Int; // I will stick with int for now.
 typedef double Real;
 typedef std::valarray<Real> Array;
 typedef std::vector<Array> VecArr;
