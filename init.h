@@ -13,13 +13,24 @@
 
 
 // typedef size_t Int; // size_t changes the behavior of some functions, I'm not sure why.
-typedef int Int; // I will stick with int for now.
+typedef unsigned int Int; // I will stick with int for now.
 typedef double Real;
 typedef std::valarray<Real> Array;
 typedef std::vector<Array> VecArr;
 typedef std::vector<VecArr> VecVecArr;
 typedef std::complex<Real> Complex;
 typedef std::valarray<Complex> CArray;
+
+template <typename T>
+bool isInArray(std::string element, T A)
+{
+    for (Int i = 0; i < A.size(); ++i)
+    {
+        if (A[i] == element)
+            return true;
+    }
+    return false;
+}
 
 Real sign(Real& x);
 
