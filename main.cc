@@ -19,13 +19,13 @@ int main(int argc, char const *argv[])
     }
 
     Json::Value results = root["results"];
-    std::string samplefile = root["sample"].asString();
-    std::string outputName = root["output"].asString();
+    bool    writePhaseSpace = isInArray("phase_space", results);
+    bool    writeEfield = isInArray("electric_field", results);
+    bool    writePhi = isInArray("electric_potential", results);
+    bool    writeRho = isInArray("charge_density", results);
 
-    bool    writePhaseSpace = results.get("phase_space", false).asBool();
-    bool    writeEfield = results.get("electric_field", false).asBool();
-    bool    writePhi = results.get("electric_potential", false).asBool();
-    bool    writeRho = results.get("charge_density", false).asBool();
+    std::string samplefile = root["sample"].asString();
+    std::string outputName = root.get("output", "results").asString();
 
     Int N;
     if (root.isMember("N"))
@@ -168,7 +168,7 @@ int main(int argc, char const *argv[])
 
 
         if (writePhaseSpace && writeStep)
-            phaseSpace.open(outputName + "/phaseSpace/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
+            phaseSpace.open(outputName + "/phase_space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
         if (writeEfield && writeStep)
             electricField.open(outputName + "/Efield/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) +  "_.dat");
