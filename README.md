@@ -35,10 +35,12 @@ The user shall provide a `JSON` file, like the one shown below, wich contains al
 ```
 It should be noted that both the `JSON` file and the sample file, must be inside the same folder **simulation_name**.
 
+Furthermore, in the `"results"` option, the user can specify the data output that they want to work with.
+
 ### Instructions
 1. Clone the repository.
 2. Compile it with `$ make`.
-3. Run the simulation with `$ ./main example/example.json`.
+3. Run the simulation with `$ ./main simulation_name/example.json`.
 
 When the simulation is completed, the output data will be available in the `"output"` directory specified in the `JSON` file --in this case, *simulation_name*--. The user can manipulate it as their convenience.
 
