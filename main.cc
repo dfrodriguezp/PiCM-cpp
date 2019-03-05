@@ -23,6 +23,7 @@ int main(int argc, char const *argv[])
     bool    writeEfield = isInArray("electric_field", results);
     bool    writePhi = isInArray("electric_potential", results);
     bool    writeRho = isInArray("charge_density", results);
+    bool    writeSpace = isInArray("space", results);
 
     std::string samplefile = root["sample"].asString();
     std::string outputName = root.get("output", "results").asString();
@@ -130,7 +131,8 @@ int main(int argc, char const *argv[])
     if (writeEfield) folders.push_back("/Efield");
     if (writePhi) folders.push_back("/phi");
     if (writeRho) folders.push_back("/rho");
-    
+    if (writeSpace) folders.push_back("/space");
+
     for (Int f = 0; f < folders.size(); ++f)
         std::system(("mkdir -p " + outputName + folders[f]).c_str());
 
@@ -142,7 +144,8 @@ int main(int argc, char const *argv[])
     std::ofstream electricField;
     std::ofstream electricPotential;
     std::ofstream chargeDensity;
-    
+    std::ofstream space;
+
     VecArr RHO, PHI, EFIELDp;
     VecVecArr EFIELDn;
     Real KE, FE;
@@ -166,7 +169,6 @@ int main(int argc, char const *argv[])
         new_velocities = velocities;
         outphase(1.0, new_velocities, QoverM, moves, EFIELDp, B, dt, N);
 
-
         if (writePhaseSpace && writeStep)
             phaseSpace.open(outputName + "/phase_space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
@@ -178,6 +180,9 @@ int main(int argc, char const *argv[])
 
         if (writeRho && writeStep)
             chargeDensity.open(outputName + "/rho/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
+
+        if (writeSpace && writeStep)
+            space.open(outputName + "/space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
 
         KE = 0.0;
@@ -192,6 +197,7 @@ int main(int argc, char const *argv[])
                                   new_velocities.at(p)[0] << " " << new_velocities.at(p)[1] << " " << new_velocities.at(p)[2] << "\n";
                 KE += masses.at(p) * norm(new_velocities.at(p)) * norm(new_velocities.at(p));
             }          
+            space << positions.at(p)[0] << " " << positions.at(p)[1] << "\n";
         }
 
         KE *= 0.5;
@@ -218,12 +224,13 @@ int main(int argc, char const *argv[])
         if (writeEfield && mod(step, ss_freq)) electricField.close();
         if (writePhi && mod(step, ss_freq)) electricPotential.close();
         if (writeRho && mod(step, ss_freq)) chargeDensity.close();
+        if (writeSpace && mod(step, ss_freq)) space.close();
 
         std::clock_t t_1 = std::clock();
         diff = Real(t_1 - t_0);
         simulationTime = (diff / CLOCKS_PER_SEC);
 
-        if ((writePhaseSpace || writeEfield || writePhi || writeRho) && writeStep)
+        if ((writePhaseSpace || writeEfield || writePhi || writeRho || writeSpace) && writeStep)
             std::cout << "Writing data of step " << step << "..." << std::endl;
         else
             std::cout << "ETR: " << simulationTime * (steps - step) << " seconds..." << std::endl;

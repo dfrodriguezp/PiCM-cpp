@@ -1,0 +1,23 @@
+{
+  "N": 10000,
+  "steps": 1000,
+  "grid_size": [
+    64,
+    64
+  ],
+  "ss_frequency": 10,
+  "dt": 0.05,
+  "dr": 1.0,
+  "sample": "example/sample.dat",
+  "seed": 53668301,
+  "output": "example",
+  "results": [
+    "phase_space",
+    "electric_potential"
+  ],
+  "Bfield": [
+    0.0,
+    0.0,
+    0.0
+  ]
+}

@@ -16,9 +16,6 @@ functions.o: functions.cc init.h
 FFT.o: FFT.cc init.h
 	$(CC) $(CFLAGS) -c FFT.cc -o FFT.o
 
-run: main
-	./main sim_two_stream_53646008.json
-
 
 .PHONY: clean
 clean:

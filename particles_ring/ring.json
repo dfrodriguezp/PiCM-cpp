@@ -1,0 +1,17 @@
+{
+    "N": 105,
+    "steps": 1000,
+    "grid_size": [
+        64,
+        64
+    ],
+    "ss_frequency": 10,
+    "dt": 0.05,
+    "output": "particles_ring",
+    "sample": "particles_ring/sample.dat",
+    "results": [
+        "space",
+        "electric_potential"
+    ],
+    "seed": 876232
+}
