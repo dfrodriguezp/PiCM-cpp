@@ -3,6 +3,11 @@
 *.h5
 *.txt
 
+# png and pdf files
+
+*.pdf
+*.png
+
 # binaries
 *.o
 main
