@@ -42,8 +42,11 @@ int main(int argc, char const *argv[])
     Int     seed =  root.get("seed", 69696969).asUInt();
 
     Real    dt = root.get("dt", 0.1).asDouble();
-    Real    dx = root.get("dx", 1.0).asDouble();
-    Real    dy = root.get("dy", 1.0).asDouble();
+    // Real    dx = root.get("dx", 1.0).asDouble();
+    // Real    dy = root.get("dy", 1.0).asDouble();
+
+    Real    Lx = root.get("Lx", 1.0).asDouble();
+    Real    Ly = root.get("Ly", 1.0).asDouble();
 
     std::valarray<Real> B(3);
 
@@ -91,8 +94,8 @@ int main(int argc, char const *argv[])
         Ny = 16;
     }
 
-    Real Lx = dx * Real(Nx);
-    Real Ly = dy * Real(Ny);
+    Real dx = Lx / Real(Nx);
+    Real dy = Ly / Real(Ny);
     VecArr positions;
     VecArr velocities;
     VecArr new_velocities;

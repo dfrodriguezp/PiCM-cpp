@@ -4,9 +4,10 @@ import json
 import os
 
 seed = numpy.random.randint(1000000)
+seed = 876232
 numpy.random.seed(seed)
-os.system("mkdir -p particles_ring")
-sample = open("particles_ring/sample.dat", mode="w")
+os.system("mkdir -p particles_ring2")
+sample = open("particles_ring2/sample.dat", mode="w")
 N_in = 5
 N_out = 100
 r = 30
@@ -39,11 +40,13 @@ json_data = {
     "grid_size": [64, 64],
     "ss_frequency": 10,
     "dt": 0.05,
-    "output": "ring_particles",
-    "sample": "ring_particles/sample.dat",
-    "results": ["space", "potential"],
+    "Lx": r * 2,
+    "Ly": r * 2,
+    "output": "particles_ring2",
+    "sample": "particles_ring2/sample.dat",
+    "results": ["space", "electric_potential", "electric_field"],
     "seed": seed
 }
 
-with open("ring.json", "w") as data:
+with open("particles_ring2/ring.json", "w") as data:
     json.dump(json_data, data)
