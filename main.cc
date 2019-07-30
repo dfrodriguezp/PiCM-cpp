@@ -199,6 +199,9 @@ int main(int argc, char const *argv[])
         new_velocities = velocities;
         outphase(1.0, new_velocities, QoverM, moves, EFIELDp, B, dt, N);
 
+        if ((writePhaseSpace || writeEfield || writePhi || writeRho || writeSpace) && writeStep)
+            std::cout << "Writing data of step " << step << "..." << std::endl;
+
         if (writePhaseSpace && writeStep)
             phaseSpace.open(outputName + "/phase_space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
@@ -263,9 +266,7 @@ int main(int argc, char const *argv[])
         diff = Real(t_1 - t_0);
         simulationTime = (diff / CLOCKS_PER_SEC);
 
-        if ((writePhaseSpace || writeEfield || writePhi || writeRho || writeSpace) && writeStep)
-            std::cout << "Writing data of step " << step << "..." << std::endl;
-        else
+        if (!writeStep)
             std::cout << "ETR: " << simulationTime * (steps - step) << " seconds..." << std::endl;
     }
 
