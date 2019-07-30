@@ -1,33 +1,74 @@
 #include "init.h"
 
+const Real PI = std::acos(-1.0);
 
-Real sign(Real& x)
+// Cooley–Tukey FFT (in-place, divide-and-conquer)
+// Higher memory requirements and redundancy although more intuitive
+void fft(CArray &x)
 {
-    if (x < 0) return -1.0;
-    else if (x > 0) return 1.0;
-    else return 0.0;
+    const Int N = x.size();
+    if (N <= 1)
+        return;
+
+    // divide
+    CArray even = x[std::slice(0, N / 2, 2)];
+    CArray odd = x[std::slice(1, N / 2, 2)];
+
+    // conquer
+    fft(even);
+    fft(odd);
+
+    // combine
+    for (Int k = 0; k < N / 2; ++k)
+    {
+        Complex t = std::polar(1.0, -2 * PI * k / N) * odd[k];
+        x[k] = even[k] + t;
+        x[k + N / 2] = even[k] - t;
+    }
 }
 
+// inverse fft (in-place)
+void ifft(CArray &x)
+{
+    // conjugate the complex numbers
+    x = x.apply(std::conj);
 
-Real norm(const Array& A)
+    // forward fft
+    fft(x);
+
+    // conjugate the complex numbers again
+    x = x.apply(std::conj);
+
+    // scale the numbers
+    x /= x.size();
+}
+
+Real sign(Real &x)
+{
+    if (x < 0)
+        return -1.0;
+    else if (x > 0)
+        return 1.0;
+    else
+        return 0.0;
+}
+
+Real norm(const Array &A)
 {
     return std::sqrt((A * A).sum());
 }
 
-
-inline Array cross(const Array& A, const Array& B)
+inline Array cross(const Array &A, const Array &B)
 {
     return {A[1] * B[2] - A[2] * B[1], A[2] * B[0] - A[0] * B[2], A[0] * B[1] - A[1] * B[0]};
 }
 
-
-Real mod(const Real& a, const Real& b)
+Real mod(const Real &a, const Real &b)
 {
     return (a < 0) ? std::fmod((a + (std::floor(-a / b) + 1) * b), b) : (std::fmod(a, b));
 }
 
-
-VecArr valarraysVector(const Int& rows, const Int& cols)
+VecArr valarraysVector(const Int &rows, const Int &cols)
 {
     VecArr f;
     Array zeros(0.0, cols);
@@ -39,10 +80,9 @@ VecArr valarraysVector(const Int& rows, const Int& cols)
     return f;
 }
 
-
-VecArr density(const VecArr& positions, 
-               const std::vector<Real>& charges, const Real& dx, 
-               const Real& dy, const Int& Nx, const Int& Ny, const Int& N)
+VecArr density(const VecArr &positions,
+               const std::vector<Real> &charges, const Real &dx,
+               const Real &dy, const Int &Nx, const Int &Ny, const Int &N)
 {
     VecArr rho = valarraysVector(Nx, Ny);
 
@@ -69,19 +109,18 @@ VecArr density(const VecArr& positions,
     return rho;
 }
 
-
-VecArr potential(const VecArr& rho, const Real& dx, const Real& dy, 
-                 const Int& Nx, const Int& Ny)
-{   
+VecArr potential(const VecArr &rho, const Real &dx, const Real &dy,
+                 const Int &Nx, const Int &Ny)
+{
     Complex rho_k[Nx][Ny];
 
     for (Int i = 0; i < Nx; ++i)
-       {
-           for (Int j = 0; j < Ny; ++j)
-           {
-               rho_k[i][j] = rho[i][j];
-           }
-       }   
+    {
+        for (Int j = 0; j < Ny; ++j)
+        {
+            rho_k[i][j] = rho[i][j];
+        }
+    }
 
     CArray f(Nx);
     CArray g(Ny);
@@ -102,7 +141,7 @@ VecArr potential(const VecArr& rho, const Real& dx, const Real& dy,
     for (Int j = 0; j < Ny; ++j)
     {
         for (Int i = 0; i < Nx; ++i)
-        {    
+        {
             f[i] = rho_k[i][j];
         }
         fft(f);
@@ -134,7 +173,7 @@ VecArr potential(const VecArr& rho, const Real& dx, const Real& dy,
     {
         for (Int m = 0; m < Ny; ++m)
         {
-            Complex denom = dy_2 * (2.0 - Wn - 1.0/Wn) + dx_2 * (2.0 - Wm - 1.0/Wm);
+            Complex denom = dy_2 * (2.0 - Wn - 1.0 / Wn) + dx_2 * (2.0 - Wm - 1.0 / Wm);
             if (denom != 0.0)
             {
                 phi_k[n][m] *= (dx_2 * dy_2) / denom;
@@ -182,20 +221,19 @@ VecArr potential(const VecArr& rho, const Real& dx, const Real& dy,
     return phi;
 }
 
-
-VecVecArr fieldNodes(const VecArr& phi, const Real& dx, const Real& dy, 
-                     const Int& Nx, const Int& Ny)
+VecVecArr fieldNodes(const VecArr &phi, const Real &dx, const Real &dy,
+                     const Int &Nx, const Int &Ny)
 {
     VecVecArr E;
     Array zeros(0.0, 3);
     for (Int i = 0; i < Nx; ++i)
-    {   
+    {
         VecArr rows;
         for (Int j = 0; j < Ny; ++j)
         {
             rows.push_back(zeros);
         }
-        E.push_back(rows);  
+        E.push_back(rows);
     }
 
     for (Int j = 0; j < Ny; ++j)
@@ -222,12 +260,11 @@ VecVecArr fieldNodes(const VecArr& phi, const Real& dx, const Real& dy,
     return E;
 }
 
-
-VecArr fieldParticles(const VecVecArr& field, 
-                      const VecArr& positions,
-                      const std::vector<Int>& moves, 
-                      const Real& dx, const Real& dy, 
-                      const Int& Nx, const Int& Ny, const Int& N)
+VecArr fieldParticles(const VecVecArr &field,
+                      const VecArr &positions,
+                      const std::vector<Int> &moves,
+                      const Real &dx, const Real &dy,
+                      const Int &Nx, const Int &Ny, const Int &N)
 {
     VecArr E = valarraysVector(N, 3);
 
@@ -260,12 +297,11 @@ VecArr fieldParticles(const VecVecArr& field,
     return E;
 }
 
-
-void boris(VecArr& velocities,
-           const std::vector<Real>& QoverM,
-           const std::vector<Int>& moves,
-           const VecArr& E, const Array& B, 
-           const Real& dt, const Int& N)
+void boris(VecArr &velocities,
+           const std::vector<Real> &QoverM,
+           const std::vector<Int> &moves,
+           const VecArr &E, const Array &B,
+           const Real &dt, const Int &N)
 {
     Array t;
     Real t_2;
@@ -289,14 +325,13 @@ void boris(VecArr& velocities,
     }
 }
 
-
-void update(VecArr& positions,
-           VecArr& velocities,
-           const std::vector<Real>& QoverM,
-           const std::vector<Int>& moves,
-           const VecArr& E, const Array& B, 
-           const Real& Lx, const Real& Ly, 
-           const Real& dt, const Int& N)
+void update(VecArr &positions,
+            VecArr &velocities,
+            const std::vector<Real> &QoverM,
+            const std::vector<Int> &moves,
+            const VecArr &E, const Array &B,
+            const Real &Lx, const Real &Ly,
+            const Real &dt, const Int &N)
 {
     boris(velocities, QoverM, moves, E, B, dt, N);
     for (Int p = 0; p < N; ++p)
@@ -310,13 +345,12 @@ void update(VecArr& positions,
     }
 }
 
-
-void outphase(const Real& direction,
-              VecArr& velocities,
-              const std::vector<Real>& QoverM,
-              const std::vector<Int>& moves,
-              const VecArr& E, const Array& B, 
-              const Real& dt, const Int& N)
+void outphase(const Real &direction,
+              VecArr &velocities,
+              const std::vector<Real> &QoverM,
+              const std::vector<Int> &moves,
+              const VecArr &E, const Array &B,
+              const Real &dt, const Int &N)
 {
     Real dT = 0.5 * direction * dt;
     boris(velocities, QoverM, moves, E, B, dT, N);

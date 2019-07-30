@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -std=c++11 -O3 -Wall
 
-binaries = main.o functions.o FFT.o
+binaries = main.o functions.o
 
 
 main: $(binaries)
@@ -12,9 +12,6 @@ main.o: main.cc init.h
 
 functions.o: functions.cc init.h
 	$(CC) $(CFLAGS) -c functions.cc -o functions.o
-
-FFT.o: FFT.cc init.h
-	$(CC) $(CFLAGS) -c FFT.cc -o FFT.o
 
 
 .PHONY: clean
