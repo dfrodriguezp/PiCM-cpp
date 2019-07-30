@@ -42,11 +42,11 @@ int main(int argc, char const *argv[])
     Int     seed =  root.get("seed", 69696969).asUInt();
 
     Real    dt = root.get("dt", 0.1).asDouble();
-    // Real    dx = root.get("dx", 1.0).asDouble();
-    // Real    dy = root.get("dy", 1.0).asDouble();
 
-    Real    Lx = root.get("Lx", 1.0).asDouble();
-    Real    Ly = root.get("Ly", 1.0).asDouble();
+    // Real    Lx = root.get("Lx", 1.0).asDouble();
+    // Real    Ly = root.get("Ly", 1.0).asDouble();
+
+
 
     std::valarray<Real> B(3);
 
@@ -69,6 +69,30 @@ int main(int argc, char const *argv[])
     else
     {
         B = {0.0, 0.0, 0.0};
+    }
+
+    Real Lx, Ly;
+
+    Json::Value sysLength;
+
+    if (root.isMember("sys_length"))
+    {
+        sysLength = root["grid_size"];
+        if (sysLength.size() != 2)
+        {
+            std::cout << "ERROR! System length must have two components!" << std::endl;
+            return 1;
+        }
+        else
+        {
+            Lx = sysLength[0].asDouble();
+            Ly = sysLength[1].asDouble();
+        }
+    }
+    else
+    {
+        Lx = 1.0;
+        Ly = 1.0;
     }
 
     Int Nx, Ny;
