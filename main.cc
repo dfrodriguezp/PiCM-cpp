@@ -2,7 +2,7 @@
 
 int main(int argc, char const *argv[])
 {
-    if (argc < 2) 
+    if (argc < 2)
     {
         std::cout << "ERROR! Please include a parameters JSON file." << std::endl;
         return 1;
@@ -12,18 +12,18 @@ int main(int argc, char const *argv[])
     Json::Reader reader;
     std::string jsonfile = argv[1];
     std::ifstream data(jsonfile, std::ifstream::binary);
-    if (!reader.parse(data, root, false)) 
+    if (!reader.parse(data, root, false))
     {
         std::cout << "ERROR! JSON file not found or invalid." << std::endl;
         return 1;
     }
 
     Json::Value results = root["results"];
-    bool    writePhaseSpace = isInArray("phase_space", results);
-    bool    writeEfield = isInArray("electric_field", results);
-    bool    writePhi = isInArray("electric_potential", results);
-    bool    writeRho = isInArray("charge_density", results);
-    bool    writeSpace = isInArray("space", results);
+    bool writePhaseSpace = isInArray("phase_space", results);
+    bool writeEfield = isInArray("electric_field", results);
+    bool writePhi = isInArray("electric_potential", results);
+    bool writeRho = isInArray("charge_density", results);
+    bool writeSpace = isInArray("space", results);
 
     std::string samplefile = root["sample"].asString();
     std::string outputName = root.get("output", "results").asString();
@@ -37,16 +37,14 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    Int     steps = root.get("steps", 50).asUInt();
-    Int     ss_freq = root.get("ss_frequency", 10).asUInt();
-    Int     seed =  root.get("seed", 69696969).asUInt();
+    Int steps = root.get("steps", 50).asUInt();
+    Int ss_freq = root.get("ss_frequency", 10).asUInt();
+    Int seed = root.get("seed", 69696969).asUInt();
 
-    Real    dt = root.get("dt", 0.1).asDouble();
+    Real dt = root.get("dt", 0.1).asDouble();
 
     // Real    Lx = root.get("Lx", 1.0).asDouble();
     // Real    Ly = root.get("Ly", 1.0).asDouble();
-
-
 
     std::valarray<Real> B(3);
 
@@ -77,7 +75,7 @@ int main(int argc, char const *argv[])
 
     if (root.isMember("sys_length"))
     {
-        sysLength = root["grid_size"];
+        sysLength = root["sys_length"];
         if (sysLength.size() != 2)
         {
             std::cout << "ERROR! System length must have two components!" << std::endl;
@@ -137,12 +135,12 @@ int main(int argc, char const *argv[])
 
     Real x, y, vx, vy, vz, q_m, charge;
     Int move;
-    
-    for (Int i = 0; i < N; ++i) 
+
+    for (Int i = 0; i < N; ++i)
     {
         sample >> x >> y >> vx >> vy >> vz >> q_m >> move;
         charge = (Lx * Ly * q_m) / N;
-        std::valarray<Real> pos = {x, y}; // 2D
+        std::valarray<Real> pos = {x, y};       // 2D
         std::valarray<Real> vel = {vx, vy, vz}; // 3V
         positions.push_back(pos);
         velocities.push_back(vel);
@@ -154,11 +152,16 @@ int main(int argc, char const *argv[])
 
     std::vector<std::string> folders = {"/energy"};
 
-    if (writePhaseSpace) folders.push_back("/phase_space");
-    if (writeEfield) folders.push_back("/Efield");
-    if (writePhi) folders.push_back("/phi");
-    if (writeRho) folders.push_back("/rho");
-    if (writeSpace) folders.push_back("/space");
+    if (writePhaseSpace)
+        folders.push_back("/phase_space");
+    if (writeEfield)
+        folders.push_back("/Efield");
+    if (writePhi)
+        folders.push_back("/phi");
+    if (writeRho)
+        folders.push_back("/rho");
+    if (writeSpace)
+        folders.push_back("/space");
 
     for (Int f = 0; f < folders.size(); ++f)
         std::system(("mkdir -p " + outputName + folders[f]).c_str());
@@ -178,7 +181,7 @@ int main(int argc, char const *argv[])
     Real KE, FE;
 
     bool writeStep;
-    energy.open(outputName + "/energy/energy_seed_" + std::to_string(seed) +"_.dat");
+    energy.open(outputName + "/energy/energy_seed_" + std::to_string(seed) + "_.dat");
 
     for (Int step = 0; step < steps; ++step)
     {
@@ -200,7 +203,7 @@ int main(int argc, char const *argv[])
             phaseSpace.open(outputName + "/phase_space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
         if (writeEfield && writeStep)
-            electricField.open(outputName + "/Efield/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) +  "_.dat");
+            electricField.open(outputName + "/Efield/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
         if (writePhi && writeStep)
             electricPotential.open(outputName + "/phi/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
@@ -211,7 +214,6 @@ int main(int argc, char const *argv[])
         if (writeSpace && writeStep)
             space.open(outputName + "/space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
 
-
         KE = 0.0;
         FE = 0.0;
 
@@ -220,10 +222,9 @@ int main(int argc, char const *argv[])
             if (moves.at(p))
             {
                 if (writePhaseSpace && writeStep)
-                    phaseSpace << positions.at(p)[0] << " " << positions.at(p)[1] << " " <<
-                                  new_velocities.at(p)[0] << " " << new_velocities.at(p)[1] << " " << new_velocities.at(p)[2] << "\n";
+                    phaseSpace << positions.at(p)[0] << " " << positions.at(p)[1] << " " << new_velocities.at(p)[0] << " " << new_velocities.at(p)[1] << " " << new_velocities.at(p)[2] << "\n";
                 KE += masses.at(p) * norm(new_velocities.at(p)) * norm(new_velocities.at(p));
-            }          
+            }
             space << positions.at(p)[0] << " " << positions.at(p)[1] << "\n";
         }
 
@@ -246,12 +247,17 @@ int main(int argc, char const *argv[])
         FE *= 0.5;
 
         energy << step << " " << KE << " " << FE << "\n";
-        
-        if (writePhaseSpace && mod(step, ss_freq)) phaseSpace.close();
-        if (writeEfield && mod(step, ss_freq)) electricField.close();
-        if (writePhi && mod(step, ss_freq)) electricPotential.close();
-        if (writeRho && mod(step, ss_freq)) chargeDensity.close();
-        if (writeSpace && mod(step, ss_freq)) space.close();
+
+        if (writePhaseSpace && mod(step, ss_freq))
+            phaseSpace.close();
+        if (writeEfield && mod(step, ss_freq))
+            electricField.close();
+        if (writePhi && mod(step, ss_freq))
+            electricPotential.close();
+        if (writeRho && mod(step, ss_freq))
+            chargeDensity.close();
+        if (writeSpace && mod(step, ss_freq))
+            space.close();
 
         std::clock_t t_1 = std::clock();
         diff = Real(t_1 - t_0);
@@ -262,9 +268,9 @@ int main(int argc, char const *argv[])
         else
             std::cout << "ETR: " << simulationTime * (steps - step) << " seconds..." << std::endl;
     }
-    
-    energy.close();  
 
-    std::cout << "Simulation finished." << std::endl; 
+    energy.close();
+
+    std::cout << "Simulation finished." << std::endl;
     return 0;
 }
