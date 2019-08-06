@@ -1,47 +1,83 @@
-# PiCM
-## 2D3V Electrostatic Particle-in-Cell Code
+# PiCM (C++ version)
 
-This code was developed in the PCM Computational Applications research group, at the Universidad Nacional de Colombia. The aim of the code is to be a tool for the simulation of different plasma phenomena. I write the code for it to be easy to understand, and easy to use to begginers in the computational physics area.
+Software for simulation of the dynamics of charged particles with periodic boundary conditions.
 
-### Pre-requisites
+## Requirements
 
-The user shall provide a `JSON` file, like the one shown below, wich contains all of the information needed to start the simulation.
+You need the `g++` compiler, along with the `jsoncpp` library. To install them, type the following command in the console
 
+```bash
+$ sudo apt install g++ libjsoncpp-dev
 ```
-{
-  "N": 10000,
-  "steps": 1000,
-  "grid_size": [
-    64,
-    64
-  ],
-  "ss_frequency": 10,
-  "dt": 0.05,
-  "dx": 1.0,
-  "dy": 1.0,
-  "sample": "simulation_name/sample.dat",
-  "seed": 53668301,
-  "output": "simulation_name",
-  "results": [
-    "phase_space",
-    "electric_potential"
-  ],
-  "Bfield": [
-    0.0,
-    0.0,
-    0.0
-  ]
-}
+
+Additionally, you need **Python3** with the following modules:
+
+- NumPy
+- tqdm
+- Matplotlib
+
+These can be installed via
+
+```bash
+$ pip install numpy click matplotlib
 ```
-It should be noted that both the `JSON` file and the sample file, must be inside the same folder **simulation_name**.
 
-Furthermore, in the `"results"` option, the user can specify the data output that they want to work with.
+or
 
-### Instructions
-1. Clone the repository.
-2. Compile it with `$ make`.
-3. Run the simulation with `$ ./main simulation_name/example.json`.
+```bash
+$ conda install numpy click matplotlib
+```
 
-When the simulation is completed, the output data will be available in the `"output"` directory specified in the `JSON` file --in this case, *simulation_name*--. The user can manipulate it as their convenience.
+<u>**Note: unfortunately, the current version of the program is only suitable for linux-based systems.**</u>
 
-Feel free to send your suggestions to improve the code. Remember that this is an educational project, aim to new computational physics students.
+## Running the program
+
+1. Clone or download the repository.
+2. Compile the program with
+
+```bash
+$ make
+```
+
+3. Run a simuation with
+
+```bash
+$ ./main path/to/jsonfile.json
+```
+
+Of course, you must know how to build that JSON file and what it contains. This is further explained in the [Wiki](https://github.com/dfrodriguezp/PiCM_cpp/wiki) of this repository.
+
+### Example
+
+Let's perform a simulation of a two-stream instability. For this, there is a script called `build_two_stream.py` which creates the sample file as well as the `.json` file. You can set the parameters you prefer. **Note:** for this example, let's pretend you didn't modified it.
+
+1. Open a terminal inside the repository folder.
+2. Run the sample script
+
+```bash
+$ python3 build_two_stream.py
+```
+
+This will create a folder with the name specified in the `output` variable. Inside that folder you can find both the sample and the `.json` file. The sample file is called `two_stream.dat` and the JSON file `sim_two_stream.json`.
+
+3. Run the simulation
+
+```bash
+$ ./main electrostatic/sim_two_stream.json
+```
+
+4. Plot the energy
+
+```bash
+$ python3 plotters/plot_energy.py electrostatic/sim_two_stream.json
+```
+
+![Energy](example_imgs/energy.png)
+
+5. Plot the phase space in the step 150
+
+```bash
+$ python3 plotters/plot_phase_space.py electrostatic/sim_two_stream.json 150
+```
+
+![Phase_space](example_imgs/step_150_x_.png)
