@@ -13,7 +13,7 @@ $ sudo apt install g++ libjsoncpp-dev
 Additionally, you need **Python3** with the following modules:
 
 - NumPy
-- tqdm
+- Click
 - Matplotlib
 
 These can be installed via
