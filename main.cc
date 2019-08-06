@@ -181,7 +181,7 @@ int main(int argc, char const *argv[])
     Real KE, FE;
 
     bool writeStep;
-    energy.open(outputName + "/energy/energy_seed_" + std::to_string(seed) + "_.dat");
+    energy.open(outputName + "/energy/energy.dat");
 
     for (Int step = 0; step < steps; ++step)
     {
@@ -203,19 +203,19 @@ int main(int argc, char const *argv[])
             std::cout << "Writing data of step " << step << "..." << std::endl;
 
         if (writePhaseSpace && writeStep)
-            phaseSpace.open(outputName + "/phase_space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
+            phaseSpace.open(outputName + "/phase_space/step_" + std::to_string(step) + "_.dat");
 
         if (writeEfield && writeStep)
-            electricField.open(outputName + "/Efield/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
+            electricField.open(outputName + "/Efield/step_" + std::to_string(step) + "_.dat");
 
         if (writePhi && writeStep)
-            electricPotential.open(outputName + "/phi/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
+            electricPotential.open(outputName + "/phi/step_" + std::to_string(step) + "_.dat");
 
         if (writeRho && writeStep)
-            chargeDensity.open(outputName + "/rho/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
+            chargeDensity.open(outputName + "/rho/step_" + std::to_string(step) + "_.dat");
 
         if (writeSpace && writeStep)
-            space.open(outputName + "/space/step_" + std::to_string(step) + "_seed_" + std::to_string(seed) + "_.dat");
+            space.open(outputName + "/space/step_" + std::to_string(step) + "_.dat");
 
         KE = 0.0;
         FE = 0.0;
@@ -251,15 +251,15 @@ int main(int argc, char const *argv[])
 
         energy << step << " " << KE << " " << FE << "\n";
 
-        if (writePhaseSpace && mod(step, ss_freq))
+        if (writePhaseSpace && writeStep)
             phaseSpace.close();
-        if (writeEfield && mod(step, ss_freq))
+        if (writeEfield && writeStep)
             electricField.close();
-        if (writePhi && mod(step, ss_freq))
+        if (writePhi && writeStep)
             electricPotential.close();
-        if (writeRho && mod(step, ss_freq))
+        if (writeRho && writeStep)
             chargeDensity.close();
-        if (writeSpace && mod(step, ss_freq))
+        if (writeSpace && writeStep)
             space.close();
 
         std::clock_t t_1 = std::clock();
