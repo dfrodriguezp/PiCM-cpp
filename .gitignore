@@ -6,7 +6,6 @@
 # png and pdf files
 
 *.pdf
-*.png
 
 # binaries
 *.o
