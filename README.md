@@ -28,7 +28,7 @@ or
 $ conda install numpy click matplotlib
 ```
 
-<u>**Note: unfortunately, the current version of the program is only suitable for linux-based systems.**</u>
+<u>**Note: unfortunately, the current version of the program is only suitable for unix-based systems.**</u>
 
 ## Running the program
 
