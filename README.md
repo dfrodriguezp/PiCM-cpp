@@ -4,7 +4,7 @@ Software for simulation of the dynamics of charged particles with periodic bound
 
 ## Requirements
 
-You need the `g++` compiler, along with the `jsoncpp` library. In order to install them, type the following command in the console
+You need the `g++` compiler, along with the `jsoncpp` library. In Ubuntu, these can be installed by typing the following command in the console
 
 ```bash
 $ sudo apt install g++ libjsoncpp-dev
@@ -28,7 +28,7 @@ or
 $ conda install numpy click matplotlib
 ```
 
-<u>**Note: unfortunately, the current version of the program is only suitable for unix-based systems.**</u>
+<u>**Note: unfortunately, the current version of the program only works on Ubuntu.**</u>
 
 ## Running the program
 
