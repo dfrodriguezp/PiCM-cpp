@@ -20,7 +20,6 @@ if not(os.path.isdir(output)):
 
 path_to_sample = f"{output}/{sample_name}"
 output_sample = open(path_to_sample, "w")
-output_sample.write("# x y vx vy vz QoverM move\n")
 
 for i in range(N_electrons):
     x = numpy.random.uniform(0, Lx)
