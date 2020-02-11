@@ -56,7 +56,7 @@ json_data = {
 }
 
 with open("{}/sim_{}".format(output, sample_name.replace(".dat", ".json")), "w") as json_out:
-    json.dump(json_data, json_out)
+    json.dump(json_data, json_out, indent=2, sort_keys=False)
 
 print(".json file built!\n")
 print(json_data)
