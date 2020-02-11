@@ -1,6 +1,6 @@
 # PiCM (C++ version)
 
-Software for simulation of the dynamics of charged particles with periodic boundary conditions.
+Software for simulation of the dynamics of charged particles with periodic boundary conditions using the particle-in-cell method.
 
 ## Requirements
 
